@@ -1,3122 +1,1890 @@
-# Health Watchers - 125 GitHub Issues for Contributors
+# Health Watchers — GitHub Issues for Contributors
 
-This document contains 125 comprehensive GitHub issues organized by category to support the Health Watchers healthcare management platform. Issues span across design, frontend, backend, DevOps, documentation, refactoring, and infrastructure improvements.
+> 125 curated issues spanning design, frontend, backend, DevOps, documentation, testing, refactoring, and more.
 
 ---
 
-## [Docs] Add comprehensive architecture diagram and documentation
+## [Docs] Add interactive system architecture diagram
 
 **Description:**
-Create detailed visual documentation of the system architecture to help contributors understand the project structure and data flow.
+The project lacks a visual, interactive overview of the full system — how the Next.js frontend, Express API, Stellar service, MongoDB, and mobile app communicate. New contributors struggle to orient themselves.
 
 **Tasks:**
-- Create system architecture diagram showing all services (web, API, stellar-service, mobile)
-- Document data flow for key operations (patient management, encounters, payments, blockchain integration)
-- Create deployment architecture diagram (local dev, Docker Compose, Kubernetes, cloud)
-- Document API integration points and webhook flows
-- Add sequence diagrams for complex workflows (patient registration, payment processing)
-- Export diagrams as SVG and PNG for README and documentation site
-- Create component interaction diagram for Stellar blockchain integration
-- Keep diagrams in sync with architecture changes via CI/CD checklist
+- Create a C4-style diagram covering: web, API, stellar-service, mobile, MongoDB, and Stellar network
+- Show data flow for patient registration, encounter creation, and payment processing
+- Illustrate auth flow: JWT issuance → middleware → refresh rotation
+- Export as both SVG (for README embed) and Mermaid source (for easy diffs)
+- Keep diagram in `docs/ARCHITECTURE.md` and link from README
+- Add a second diagram specifically for the Stellar payment lifecycle (initiate → batch → reconcile → receipt)
 
-**Acceptance Criteria:**
-- All diagrams are version-controlled and updatable
-- Diagrams are referenced in README and architecture docs
-- New contributor can understand system from diagrams alone
-
 ---
 
-## [Docs] Create API integration guide for third-party developers
+## [Docs] Write contributor onboarding guide for first-time contributors
 
 **Description:**
-Develop comprehensive API documentation and integration guide for external partners and developers.
+`CONTRIBUTING.md` exists but is high-level. New contributors need a step-by-step guide that gets them to a working local environment with real data within 15 minutes.
 
 **Tasks:**
-- Document all REST endpoints with examples and error handling
-- Create OpenAPI 3.1 specification for all API routes
-- Write integration guide for clinic management features
-- Document webhook payloads and retry mechanisms
-- Create SDK documentation for popular languages (JavaScript, Python, Java)
-- Add code examples for common use cases (patient import, appointment scheduling)
-- Document authentication flows and API key management
-- Provide Postman collection with pre-request scripts
-- Create authentication flow diagram
-
-**Acceptance Criteria:**
-- OpenAPI spec auto-generated from code annotations
-- All endpoints documented with request/response examples
-- SDKs available in at least 3 languages
-- Integration examples pass CI/CD tests
+- Document exact prerequisites (Node 18, Docker, etc.) with version check commands
+- Write a "from clone to first test pass" walkthrough
+- Cover the monorepo structure and Turbo task graph
+- Document the seed script and what data it creates
+- Add a "good first issues" section with links
+- Add troubleshooting steps for the most common setup errors (MongoDB connection, env vars, port conflicts)
 
 ---
 
-## [Docs] Implement developer onboarding guide
+## [Docs] Document all environment variables with descriptions and defaults
 
 **Description:**
-Create step-by-step guides to get new developers productive quickly.
+`.env.example` lists variable names but lacks descriptions for many of them. Contributors are unsure which are required, which are optional, and what format each expects.
 
 **Tasks:**
-- Write "Getting Started" guide for local setup (Mac, Linux, Windows)
-- Create Docker-based quick start guide (5-minute setup)
-- Document environment variable configuration and secrets management
-- Write troubleshooting guide for common setup issues
-- Create architecture walkthrough for new developers
-- Document development workflow (branching, commits, PRs)
-- Add IDE configuration guides (VS Code extensions, prettier setup)
-- Create video tutorials for complex workflows
-- Document database seeding and test data setup
+- Go through every variable in `.env.example` and add an inline comment
+- Group variables by service: API, web, stellar-service
+- Mark required vs. optional
+- Document valid values for enum-style variables (e.g., `STELLAR_NETWORK=testnet|mainnet`)
+- Add a note about AWS Secrets Manager usage in production
+- Keep in sync with `packages/config/index.ts` validation logic
 
-**Acceptance Criteria:**
-- New developer can be productive within 1 hour
-- All setup steps work across macOS, Linux, and Windows
-- Troubleshooting guide covers 80% of common issues
-- Video tutorials accessible and searchable
-
 ---
 
-## [Docs] Add security and compliance documentation
+## [Docs] Add API versioning documentation
 
 **Description:**
-Comprehensive documentation of HIPAA compliance, security practices, and incident response procedures.
+`docs/API_DOCUMENTATION.md` and `apps/api/docs/api-versioning-strategy.md` describe the strategy, but there is no clear guide for consumers on how to handle version negotiation, deprecation notices, and migration paths.
 
 **Tasks:**
-- Document HIPAA compliance architecture and controls
-- Create data privacy and encryption documentation
-- Write security testing procedures and checklist
-- Document incident response playbook
-- Create audit logging documentation with examples
-- Write PHI handling best practices guide
-- Document breach notification procedures
-- Create compliance checklist for deployments
-- Add BAA (Business Associate Agreement) template
-
-**Acceptance Criteria:**
-- All security controls documented
-- Compliance checklist prevents non-compliant deployments
-- Legal team approves all documentation
-- Audit logs demonstrate compliance
+- Document the current versioning scheme (header vs. URL path)
+- Write a migration guide template for breaking changes
+- Add versioning examples to the Postman collection
+- Link from the main API documentation
+- Add sunset dates for any deprecated endpoints
 
 ---
 
-## [Docs] Create database schema documentation
+## [Docs] Create a HIPAA compliance checklist for contributors
 
 **Description:**
-Auto-generate and maintain up-to-date MongoDB schema documentation.
+Health Watchers is HIPAA-compliant, but there is no checklist to help contributors understand what they must verify before merging a change that touches PHI (Protected Health Information).
 
 **Tasks:**
-- Document all MongoDB collections and their relationships
-- Create schema visualization for major entities
-- Document indexing strategy for performance
-- Create migration changelog showing schema evolution
-- Document data retention and archival policies
-- Write query optimization guide
-- Create database backup and recovery documentation
-- Document connection pooling configuration
-- Add performance tuning guide
+- List all PHI fields in the patient, encounter, and lab-results models
+- Document which fields are encrypted at rest and how to add new encrypted fields
+- Add a checklist item to the PR template: "Does this change touch PHI? Have you verified encryption and audit logging?"
+- Document the audit log model and when `createAuditLog` must be called
+- Reference `SECURITY.md` and `docs/SECURITY_POLICY.md`
 
-**Acceptance Criteria:**
-- Schema docs auto-generated from code
-- All indexes documented with reasoning
-- Performance benchmarks documented
-- Recovery procedures tested quarterly
-
 ---
 
-## [Frontend] Implement responsive design system refactor
+## [Docs] Write testing guide for each app in the monorepo
 
 **Description:**
-Refactor component library to use consistent design patterns across all breakpoints.
+`docs/TESTING_GUIDE.md` exists but coverage is uneven across the apps. Developers need clear instructions for running unit, integration, contract, mutation, and E2E tests for each app independently.
 
 **Tasks:**
-- Audit all existing components for responsive inconsistencies
-- Create comprehensive Tailwind CSS utility extension library
-- Document responsive design patterns and guidelines
-- Create mobile-first component variants for key components
-- Implement responsive image handling with Next.js Image component
-- Create responsive typography scale
-- Implement responsive spacing and layout system
-- Update all components to follow responsive patterns
-- Create Storybook stories for all responsive variants
-- Add responsive testing to E2E test suite
-
-**Acceptance Criteria:**
-- All components work on mobile, tablet, desktop
-- Lighthouse mobile score > 90
-- No horizontal scrolling on any device
-- Design system documentation complete
+- Document unit test patterns for the API modules
+- Document how to run contract tests (`jest.contract.config.ts`) and what Pact providers/consumers are defined
+- Document Playwright E2E setup and how to run tests against a local dev stack
+- Document Stryker mutation testing and how to interpret the HTML report
+- Add a section on accessibility tests (`playwright.a11y.config.ts`)
 
 ---
 
-## [Frontend] Refactor authentication UI flow
+## [Docs] Add Stellar integration developer guide
 
 **Description:**
-Modernize authentication screens with improved UX and accessibility.
+The Stellar service is complex (batch payments, multi-sig, cold wallet, payment reconciliation, exchange rates, DEX) but lacks a developer guide explaining how the pieces fit together and how to test against Stellar testnet.
 
 **Tasks:**
-- Redesign login/registration screens with modern UI
-- Implement progressive password strength indicator
-- Add social login integration (OAuth 2.0)
-- Create MFA setup wizard with step-by-step guidance
-- Implement password reset flow with email verification
-- Add session timeout warnings before logout
-- Create account recovery flow for locked accounts
-- Implement biometric authentication option
-- Add security notifications for account changes
-- Create unified auth error messaging
+- Document how to fund a testnet account using Friendbot
+- Explain the payment state machine and its states
+- Document the batch processor and how to trigger a batch manually
+- Explain the cold wallet architecture and signing flow
+- Add a section on the payment reconciliation service
+- Cover the exchange rate cache and refresh logic
 
-**Acceptance Criteria:**
-- Auth flow passes accessibility audit
-- Session recovery rate > 95%
-- Support for 3+ auth methods
-- Error messages are user-friendly
-
 ---
 
-## [Frontend] Implement advanced patient search with filters
+## [Docs] Document database schema and index strategy
 
 **Description:**
-Create sophisticated patient search with real-time results and advanced filtering.
+`docs/DATABASE_SCHEMA.md` exists but may be out of sync with the actual Mongoose models. Indexes are scattered across model files and migrations.
 
 **Tasks:**
-- Implement full-text search on patient names and IDs
-- Add advanced filter UI (age range, insurance, conditions, etc.)
-- Implement search result pagination and lazy loading
-- Add search history and saved searches
-- Create duplicate patient detection in search results
-- Implement search analytics for popular queries
-- Add keyboard shortcuts for advanced search
-- Implement search result export functionality
-- Add real-time filter preview of results count
-- Create search tips tooltip
+- Audit all Mongoose models and verify the schema doc is accurate
+- Add an index strategy section: which queries each index supports
+- Document the migration workflow end-to-end with an example
+- Add an ERD (entity-relationship diagram) for the core entities
+- Document the archive policy from `apps/api/src/modules/archive/ARCHIVAL_STRATEGY.md`
 
-**Acceptance Criteria:**
-- Search completes in <200ms for 100k records
-- Filters support complex boolean logic
-- Search accessible via keyboard
-- Mobile search experience optimized
-
 ---
 
-## [Frontend] Build comprehensive patient dashboard
+## [Docs] Add runbook for common operational failures
 
 **Description:**
-Create rich dashboard showing patient health overview and key metrics.
+`monitoring/runbooks/` has runbooks for MongoDB and Stellar failures, but several common failure scenarios are missing.
 
 **Tasks:**
-- Design dashboard layout with configurable widgets
-- Implement health score card with trend visualization
-- Create appointment timeline with status indicators
-- Build medication list with interaction warnings
-- Implement lab results visualization with normal ranges
-- Create vaccination status card with due dates
-- Add appointment booking quick action
-- Implement health metrics charts (weight, BP, glucose)
-- Create patient action items and follow-up reminders
-- Add quick access to recent encounters
-
-**Acceptance Criteria:**
-- Dashboard loads in <2 seconds
-- All widgets refresh independently
-- Mobile layout optimized for portrait
-- Accessibility score ≥95
+- Add runbook: API pod crash loop (OOMKilled, config error)
+- Add runbook: Stellar transaction submission failure
+- Add runbook: Redis connection failure (affects rate limiting)
+- Add runbook: JWT secret rotation
+- Add runbook: Webhook delivery failure spike
+- Ensure all runbooks follow the same template: symptoms → diagnosis → remediation → escalation
 
 ---
 
-## [Frontend] Implement dark mode with persistence
+## [Docs] Publish Docusaurus documentation site
 
 **Description:**
-Add dark mode theme with automatic system preference detection.
+`apps/docs/` contains a Docusaurus setup with a skeleton of docs, but it is not deployed anywhere. The CI/CD pipeline does not build or deploy it.
 
 **Tasks:**
-- Implement theme context provider (light/dark/auto)
-- Create dark mode color palette matching brand
-- Update all components for dark mode compatibility
-- Add theme toggle in user settings
-- Implement system preference detection
-- Persist theme preference to localStorage
-- Add CSS-in-JS dark mode support
-- Test all charts and data visualizations in dark mode
-- Implement smooth theme transition animations
-- Document dark mode implementation for contributors
+- Verify `apps/docs` builds without errors
+- Add a GitHub Actions job to build and deploy to GitHub Pages on merge to `main`
+- Migrate key docs from the `docs/` folder into the Docusaurus structure
+- Add a search plugin (Algolia or local)
+- Link the deployed site from the README
 
-**Acceptance Criteria:**
-- Theme persists across sessions
-- All UI readable in both themes
-- Respects system preferences when set to auto
-- Performance impact <50ms theme switch
-
 ---
 
-## [Frontend] Refactor encounter documentation form
+## [CI/CD] Add environment-specific deployment gates to deploy workflow
 
 **Description:**
-Improve encounter form UX with better structure and inline help.
+`deploy.yml` deploys to environments but lacks explicit approval gates between staging and production.
 
 **Tasks:**
-- Redesign form with collapsible sections
-- Implement auto-save functionality
-- Add inline field validation with helpful messages
-- Create template selection UI for quick form population
-- Implement field dependencies (conditional fields)
-- Add rich text editor for clinical notes
-- Create diagnosis/treatment suggestions based on inputs
-- Implement medication interaction checking
-- Add document attachment upload with preview
-- Create form state recovery for network failures
-
-**Acceptance Criteria:**
-- Form auto-saves every 30 seconds
-- Template selection reduces form time by 50%
-- Form recoverable if browser crashes
-- Mobile form completion rate >80%
+- Add a `staging` environment with auto-deploy on merge to `main`
+- Add a `production` environment requiring manual approval from a CODEOWNER
+- Integrate smoke test execution between staging deploy and production approval
+- Notify on Slack/Teams when production approval is pending
+- Ensure rollback step is available as a manual workflow trigger
 
 ---
 
-## [Frontend] Build appointment scheduling interface
+## [CI/CD] Add Lighthouse CI to measure web performance on every PR
 
 **Description:**
-Create intuitive appointment scheduling with availability checking.
+There is no automated check for web performance regressions. A PR could silently degrade Lighthouse scores.
 
 **Tasks:**
-- Implement calendar view with provider availability
-- Add time slot selection with duration options
-- Create appointment type selector with descriptions
-- Implement reason for visit text input
-- Add location selection for multi-location clinics
-- Create appointment confirmation with calendar invite
-- Implement waiting list functionality
-- Add appointment reminders notification setup
-- Create reschedule/cancel workflow
-- Add telehealth option selector
+- Add `@lhci/cli` to the web app dev dependencies
+- Create `.lighthouserc.js` with thresholds: performance ≥ 80, accessibility ≥ 95, best-practices ≥ 90
+- Add a `lighthouse` job to `ci.yml` that builds the Next.js app and runs LHCI against it
+- Post results as a PR comment with score deltas
+- Fail the job if any score drops below the threshold
 
-**Acceptance Criteria:**
-- Scheduling process completes in <3 steps
-- Real-time availability updates
-- Timezone handling for remote patients
-- Mobile scheduling success rate >85%
-
 ---
 
-## [Frontend] Implement invoice/payment interface
+## [CI/CD] Add end-to-end test job to CI pipeline
 
 **Description:**
-Build invoice viewing and payment processing interface.
+Playwright E2E tests exist (`apps/web/e2e/`) but are not run in CI. Regressions in critical flows (auth, patient registration, payment) go undetected.
 
 **Tasks:**
-- Create invoice detail view with itemized charges
-- Implement payment form with card input
-- Add multiple payment method support (card, bank transfer)
-- Create payment receipt generation and download
-- Implement payment history timeline
-- Add recurring payment setup UI
-- Create payment plan options display
-- Implement insurance verification UI
-- Add payment status indicators
-- Create payment method management interface
-
-**Acceptance Criteria:**
-- Payment processing PCI DSS compliant
-- Invoice details clear and auditable
-- Payment success rate >98%
-- Mobile payment experience optimized
+- Add an `e2e` job to `ci.yml` that runs after the `build` job
+- Start the full stack using `docker-compose -f docker-compose.dev.yml`
+- Wait for health endpoints to return 200 before running tests
+- Run `npx playwright test` against all spec files in `apps/web/e2e/`
+- Upload Playwright HTML report as a CI artifact
+- Only run on PRs that touch `apps/web/` or `apps/api/`
 
 ---
 
-## [Frontend] Add data export functionality
+## [CI/CD] Add Snyk or OWASP Dependency-Check to CI
 
 **Description:**
-Implement patient data export in multiple formats with privacy controls.
+`dependency-vulnerability-tracking.yml` exists but relies on GitHub Dependabot. A dedicated SCA (Software Composition Analysis) scan step with pass/fail gates is needed.
 
 **Tasks:**
-- Create export dialog with format selection (PDF, CSV, HL7, FHIR)
-- Implement date range selection for exports
-- Add field selection for customizable exports
-- Create PDF generation with clinical formatting
-- Implement encryption option for sensitive exports
-- Add export progress indicator
-- Create export history and management UI
-- Implement scheduled export automation
-- Add export audit logging
-- Create email delivery option for exports
+- Add Snyk or OWASP Dependency-Check as a CI step
+- Fail the build if any critical or high CVE is introduced by a PR
+- Allow suppression of false positives via a checked-in suppression file
+- Post a summary comment on the PR listing new vulnerabilities
+- Configure weekly full scans and report to the security team
 
-**Acceptance Criteria:**
-- Exports HIPAA-compliant with encryption
-- All formats validated against standards
-- Export completes for 10k records in <10 seconds
-- User can verify exported data integrity
-
 ---
 
-## [Frontend] Implement multilingual support expansion
+## [CI/CD] Add database migration check to CI pipeline
 
 **Description:**
-Extend internationalization support to cover all UI text.
+Migrations run automatically before tests in CI, but there is no check to verify that every migration has a `down` function or that `migrate:status` is clean before merging.
 
 **Tasks:**
-- Complete French translation coverage (100%)
-- Add Portuguese translation for Latin American users
-- Implement Yoruba translation for African markets
-- Add Hausa translation expansion
-- Create translation management interface
-- Implement RTL language support preparation
-- Add date/time localization for all languages
-- Create currency localization for payments
-- Implement plural rules for all languages
-- Add translation testing to CI/CD
-
-**Acceptance Criteria:**
-- All UI text translated to at least 3 languages
-- Translation coverage >95%
-- Translations maintained via crowdsourcing platform
-- RTL support ready for implementation
+- Add a `migrations` job that runs `migrate:status` and fails if any migration is in an unexpected state
+- Lint migration files to ensure both `up` and `down` are exported
+- Add a test that runs `up` followed by `down` for every new migration in a PR
+- Document the migration CI process in the README
 
 ---
 
-## [Frontend] Build compliance documentation UI
+## [CI/CD] Publish Postman collection to public workspace on merge
 
 **Description:**
-Create UI for managing HIPAA compliance documents and audit records.
+The CI pipeline has a `postman-sync` job stub, but it requires `POSTMAN_API_KEY` and `POSTMAN_COLLECTION_UID` secrets to be configured and the job is not fully wired up.
 
 **Tasks:**
-- Implement BAA (Business Associate Agreement) document manager
-- Create compliance checklist tracker
-- Build audit log viewer with filtering
-- Implement breach incident reporting interface
-- Add consent management UI
-- Create policy acknowledgment interface
-- Implement employee training tracking
-- Add security assessment results display
-- Create compliance report generation
-- Implement data retention policy UI
+- Document how to set the required secrets in the repository settings
+- Complete the `postman-sync` job in `ci.yml`
+- Run `scripts/generate-postman.js` to regenerate the collection from source before syncing
+- Add a validation step that checks the collection against the OpenAPI spec
+- Post a link to the updated workspace in the PR comment
 
-**Acceptance Criteria:**
-- All compliance documents searchable and versioned
-- Audit logs immutable and timestamped
-- Reports generate in <5 seconds
-- Interface supports role-based access
-
 ---
 
-## [Frontend] Implement PWA offline capability
+## [CI/CD] Add Helm chart linting and dry-run to CI
 
 **Description:**
-Enhance Progressive Web App features for offline functionality.
+`helm/health-watchers/` contains a full Helm chart but there is no CI step that lints it or performs a dry-run against a test cluster.
 
 **Tasks:**
-- Implement service worker caching strategy
-- Add offline indicator in UI
-- Create offline data sync queue
-- Implement background sync API
-- Add offline-first data access
-- Create offline page for unsupported features
-- Implement push notification support
-- Add install prompts for PWA
-- Create offline data storage management
-- Implement conflict resolution for offline changes
+- Add a `helm-lint` job to `ci.yml` running `helm lint helm/health-watchers/`
+- Add a `helm-template` step to validate templating with `helm template`
+- Run `helm upgrade --dry-run` against a kind (Kubernetes in Docker) cluster
+- Validate the generated YAML with `kubectl apply --dry-run=server`
+- Only trigger on changes to `helm/**` or `.github/workflows/ci.yml`
 
-**Acceptance Criteria:**
-- Core features functional offline
-- Automatic sync when online
-- Local storage limits respected
-- PWA installable on major browsers/OS
-
 ---
 
-## [Frontend] Create mobile app UI components
+## [CI/CD] Add branch protection rules documentation
 
 **Description:**
-Develop specialized components for React Native mobile application.
+The repository's branch protection rules are not documented, causing confusion about what is required before a PR can merge.
 
 **Tasks:**
-- Create mobile-specific component library
-- Implement bottom tab navigation
-- Create mobile drawer menu
-- Build mobile appointment calendar
-- Implement mobile payment interface
-- Create mobile notification center
-- Build mobile document viewer
-- Implement mobile forms with mobile keyboards
-- Create mobile chart components
-- Add mobile gesture handlers
-
-**Acceptance Criteria:**
-- Components follow iOS and Android guidelines
-- Touch targets ≥44px minimum
-- Performance optimized for mobile devices
-- Accessibility features working on mobile
+- Document required status checks for the `main` branch
+- Document required reviewers (see `CODEOWNERS`)
+- Add a `BRANCH_PROTECTION.md` or update `CONTRIBUTING.md`
+- Add a GitHub Actions step that verifies PRs reference a GitHub issue
+- Document the commitlint convention (`commitlintrc.json`)
 
 ---
 
-## [Frontend] Add real-time collaboration features
+## [Backend] Standardize API pagination across all list endpoints
 
 **Description:**
-Implement real-time updates and collaborative editing capabilities.
+`.kiro/specs/api-pagination-standardization/` has a detailed spec for cursor-based and offset-based pagination, but implementation is inconsistent across modules. Some endpoints return arrays with no metadata; others use different field names.
 
 **Tasks:**
-- Set up WebSocket connections for live updates
-- Implement real-time patient data syncing
-- Create collaborative encounter note editing
-- Add presence indicators for active users
-- Implement notification system for data changes
-- Add conflict resolution for simultaneous edits
-- Create activity feed for patient records
-- Implement real-time appointment updates
-- Add typing indicators for shared editing
-- Create operational transformation for text
+- Implement a shared `paginate()` utility in `apps/api/src/shared/`
+- Apply it to: patients, encounters, appointments, payments, invoices, lab-results, medications, referrals, and notifications
+- Return consistent shape: `{ data: T[], pagination: { total, page, limit, hasMore, nextCursor? } }`
+- Add integration tests covering boundary conditions (empty, single page, last page)
+- Update OpenAPI spec and Postman collection to reflect the new schema
+- Write a migration guide for API consumers
 
-**Acceptance Criteria:**
-- Real-time updates <500ms latency
-- Conflict resolution handles edge cases
-- Presence info accurate within 1 second
-- System scales to 100+ concurrent users
-
 ---
 
-## [Backend] Refactor authentication module with improved security
+## [Backend] Implement Stellar Soroban smart contract integration
 
 **Description:**
-Modernize authentication system with enhanced security controls.
+`.kiro/specs/stellar-soroban-integration/` has a complete requirements and design doc. The implementation tasks are defined but not started.
 
 **Tasks:**
-- Implement passport.js integration for multiple auth strategies
-- Add session invalidation on suspicious activity
-- Implement rate limiting on auth endpoints
-- Add captcha verification for repeated failed attempts
-- Create password policy enforcement
-- Implement password history to prevent reuse
-- Add account lockout mechanism with gradual unlock
-- Create security questions as alternative recovery
-- Implement hardware security key support
-- Add authentication analytics and anomaly detection
-
-**Acceptance Criteria:**
-- All auth endpoints rate-limited
-- Session security following OWASP guidelines
-- No plaintext passwords in logs/errors
-- Authentication metrics tracked and alerted
+- Scaffold the Soroban contract project structure under `apps/stellar-service/src/soroban/`
+- Implement the payment escrow contract in Rust
+- Add contract compilation and deployment scripts
+- Integrate contract invocation into the existing payment flow
+- Add unit tests for the contract using the Stellar test framework
+- Update the stellar-service README with contract deployment instructions
 
 ---
 
-## [Backend] Implement comprehensive audit logging
+## [Backend] Implement encounter attachment upload and retrieval
 
 **Description:**
-Create detailed audit trail for all data modifications and access.
+`.kiro/specs/encounter-attachments/` defines requirements for uploading files (images, PDFs, lab reports) to encounters. The controller stub exists in `encounters/attachments.controller.ts` but functionality is incomplete.
 
 **Tasks:**
-- Implement automatic change tracking on all models
-- Create audit log middleware for all requests
-- Add who/when/what information to all changes
-- Implement immutable audit log storage
-- Create audit log querying interface
-- Add data retention policies for audit logs
-- Implement audit log encryption at rest
-- Create compliance report generation from audit logs
-- Add real-time audit alerts for critical changes
-- Implement audit log archive to cold storage
+- Implement multipart upload endpoint with file type and size validation
+- Store files in S3 (or local filesystem for dev) via the documents storage service
+- Associate attachments with encounters in the database
+- Implement attachment retrieval with signed URL generation
+- Add virus scanning stub (ClamAV or similar) before storing
+- Write unit and integration tests
 
-**Acceptance Criteria:**
-- All changes audited with full context
-- Audit logs immutable and timestamped
-- Queries on 1M audit entries complete in <2 seconds
-- HIPAA audit requirements met
-
 ---
 
-## [Backend] Build patient data validation framework
+## [Backend] Implement patient communication log module
 
 **Description:**
-Create comprehensive validation rules for all patient data inputs.
+`.kiro/specs/patient-communication-log/` specifies a full communication history feature (SMS, email, in-app messages). The model exists but the service and routes are incomplete.
 
 **Tasks:**
-- Implement medical coding validators (ICD-10, CPT, SNOMED)
-- Create date of birth validation with age calculations
-- Add insurance information validation
-- Implement phone number and email validation per region
-- Create medication name and dosage validation
-- Add lab result value range validation
-- Implement allergy interaction validation
-- Create vaccine code validation
-- Add clinical note validation for required fields
-- Implement cross-field validation rules
-
-**Acceptance Criteria:**
-- Validators cover all major fields
-- Validation rules configurable per clinic
-- Validation errors provide actionable feedback
-- Invalid data cannot be saved
+- Complete `communication.service.ts` with send, list, and mark-as-read operations
+- Integrate with the notification service for delivery tracking
+- Add communication log entries when SMS OTP or appointment reminders are sent
+- Expose a paginated GET endpoint at `/patients/:id/communications`
+- Add RBAC: only clinic staff with appropriate roles can view communication logs
+- Write tests covering the log creation and retrieval flows
 
 ---
 
-## [Backend] Implement database migration system improvements
+## [Backend] Implement encounter outcome tracking
 
 **Description:**
-Enhance database migration management with better tooling.
+`.kiro/specs/encounter-outcome-tracking/` defines requirements for tracking clinical outcomes (resolved, follow-up needed, referred, etc.) on encounters. The encounter model has fields but the logic is not implemented.
 
 **Tasks:**
-- Add migration rollback testing to CI/CD
-- Implement dry-run mode for migrations
-- Create migration status dashboard
-- Add zero-downtime migration support
-- Implement migration performance benchmarking
-- Create migration rollback automation
-- Add data validation after migrations
-- Implement migration checkpoints for large data updates
-- Create migration documentation generator
-- Add migration compatibility verification
+- Add outcome status transitions to the encounter state machine
+- Implement the follow-up reminder job (`follow-up-reminder-job.ts`) to send notifications
+- Add an outcomes summary endpoint for the dashboard
+- Integrate outcome data into the AI risk stratification service
+- Write tests for state transitions and reminder scheduling
 
-**Acceptance Criteria:**
-- All migrations tested before deployment
-- Rollback available for 30 days
-- Migrations can run with zero downtime
-- Migration performance logged
-
 ---
 
-## [Backend] Create comprehensive error handling system
+## [Backend] Implement AI voice transcription for encounters
 
 **Description:**
-Implement consistent error handling and reporting across the API.
+`.kiro/specs/ai-voice-transcription/` specifies a workflow where audio recordings of consultations are transcribed and auto-populated into SOAP notes. The spec is fully defined but not implemented.
 
 **Tasks:**
-- Create error taxonomy and standardized error codes
-- Implement error response format validation
-- Add context information to all errors
-- Create error logging with stack traces
-- Implement error tracking integration (Sentry)
-- Add error message i18n support
-- Create client-friendly error messages
-- Implement error boundary middleware
-- Add error response caching for rate limits
-- Create error analytics dashboard
-
-**Acceptance Criteria:**
-- All errors follow consistent format
-- Error messages helpful for debugging
-- Sensitive information never in error messages
-- Error tracking shows trends
+- Integrate Google Speech-to-Text or Whisper API into `apps/api/src/modules/ai/`
+- Add an audio upload endpoint on the encounters module
+- Implement transcription queuing and async processing
+- Map transcription output to SOAP note fields (Subjective, Objective, Assessment, Plan)
+- Add a review/edit UI step before saving
+- Ensure audio files are deleted after transcription (PHI minimization)
 
 ---
 
-## [Backend] Build API rate limiting and throttling
+## [Backend] Implement data anonymization package
 
 **Description:**
-Implement sophisticated rate limiting to protect API from abuse.
+`packages/anonymize/src/index.ts` implements anonymization functions, but `.kiro/specs/data-anonymization/` indicates the design doc is empty and full integration into the export and research modules is incomplete.
 
 **Tasks:**
-- Implement per-user rate limits
-- Add per-IP rate limits
-- Create tiered rate limits by subscription
-- Implement adaptive rate limiting
-- Add burst allowance for spikes
-- Create rate limit headers in responses
-- Implement rate limit bypass for internal services
-- Add rate limit metrics and alerts
-- Create rate limit configuration UI
-- Implement DDoS protection measures
+- Complete the design doc in `.kiro/specs/data-anonymization/design.md`
+- Ensure k-anonymity for research data exports (`research.controller.ts`)
+- Add differential privacy noise to aggregate reports
+- Integrate anonymization into the FHIR export pipeline
+- Add a test dataset that verifies re-identification risk is below threshold
+- Document the anonymization algorithm and parameters
 
-**Acceptance Criteria:**
-- Rate limits prevent abuse
-- Legitimate traffic not impacted
-- Rate limit info visible to clients
-- Metrics show protection efficacy
-
 ---
 
-## [Backend] Implement caching layer for performance
+## [Backend] Complete Stellar multi-signature payment implementation
 
 **Description:**
-Add Redis-based caching to improve API response times.
+`.kiro/specs/stellar-multisig-payments/design.md` is empty despite having complete requirements. Multi-sig is critical for large payment approvals.
 
 **Tasks:**
-- Implement query result caching
-- Add cache invalidation strategies
-- Create cache warming for common queries
-- Implement cache-aside pattern for data access
-- Add distributed session storage in Redis
-- Create cache metrics and hit rate tracking
-- Implement cache stampede prevention
-- Add cache debugging interface
-- Create cache expiration policies
-- Implement cache compression for large objects
+- Design the multi-sig workflow: who are the signers, what thresholds are required
+- Implement the multi-sig transaction building in `stellar.ts`
+- Add an approval queue endpoint: `POST /payments/:id/approve`
+- Notify pending signers via the notification service
+- Handle timeout: auto-void transactions that do not gather signatures within 24 hours
+- Add tests for 2-of-3 and 3-of-5 signature scenarios
 
-**Acceptance Criteria:**
-- API response times improved by 50%
-- Cache hit rate >80% for common queries
-- Cache consistency verified
-- Cache failures transparent to client
-
 ---
 
-## [Backend] Build appointment scheduling system
+## [Backend] Implement Stellar batch payment processor
 
 **Description:**
-Implement sophisticated appointment management with availability checking.
+`batch-processor.ts` exists in the stellar-service but `.kiro/specs/stellar-batch-payments/tasks.md` shows many tasks remain. The API-side batch endpoint is also incomplete.
 
 **Tasks:**
-- Create appointment availability algorithm
-- Implement conflict detection for double bookings
-- Add appointment reminder scheduling
-- Create appointment rescheduling workflow
-- Implement waiting list management
-- Add appointment analytics tracking
-- Create appointment templates
-- Implement appointment duration validation
-- Add telehealth appointment support
-- Create appointment clustering for efficient scheduling
-
-**Acceptance Criteria:**
-- No double bookings possible
-- Reminders sent 24h and 1h before
-- Rescheduling updates all notifications
-- System handles 10k appointments/day
+- Complete the batch payment creation endpoint in `payments/batch-payment.controller.ts`
+- Implement the retry logic for failed transactions within a batch
+- Add partial success handling: report which payments succeeded and which failed
+- Implement batch cancellation before submission
+- Add metrics for batch throughput and failure rate
+- Write end-to-end tests simulating a 50-payment batch on testnet
 
 ---
 
-## [Backend] Implement patient data export system
+## [Backend] Implement request ID propagation across all services
 
 **Description:**
-Create flexible patient data export with multiple format support.
+`.kiro/specs/request-id-propagation/` defines requirements for propagating a unique `X-Request-ID` header from the web app through the API to the stellar-service for end-to-end tracing.
 
 **Tasks:**
-- Implement PDF generation with clinical templates
-- Add CSV export with customizable fields
-- Implement HL7 v2 export format
-- Add FHIR JSON export format
-- Create data anonymization for research exports
-- Implement batch export functionality
-- Add export encryption and signing
-- Create export audit trail
-- Implement export scheduling and automation
-- Add export error recovery
+- Add request ID middleware to the API that generates or passes through `X-Request-ID`
+- Attach the request ID to all outbound HTTP calls to stellar-service
+- Include the request ID in all structured log entries
+- Add the request ID to error responses so users can reference it when reporting issues
+- Verify OpenTelemetry trace IDs are correlated with request IDs
+- Write integration tests verifying the header is present throughout
 
-**Acceptance Criteria:**
-- Exports validate against standards
-- Large exports (10k records) complete in <60s
-- All exports encrypted during transmission
-- Export correctness verified by tests
-
 ---
 
-## [Backend] Build medication interaction checker
+## [Backend] Add rate limiting per-endpoint with Redis
 
 **Description:**
-Implement medication interaction detection and warnings.
+`docs/API_RATE_LIMITING.md` documents a rate limiting strategy, but the implementation may not cover all sensitive endpoints (auth, PHI export, AI).
 
 **Tasks:**
-- Integrate pharmaceutical database (RxNorm)
-- Create interaction detection algorithm
-- Implement severity classification (critical, major, moderate)
-- Add allergy interaction checking
-- Create drug-food interaction warnings
-- Implement clinical decision support
-- Add interaction explanation generation
-- Create interaction database caching
-- Implement interaction updates from CDC
-- Add interaction analytics
-
-**Acceptance Criteria:**
-- Detects all critical interactions
-- Alert accuracy >95%
-- Check completes in <500ms
-- Interaction data updated regularly
+- Audit all endpoints and classify by sensitivity level
+- Add stricter limits to: `/auth/login`, `/auth/register`, `/export/*`, `/ai/*`, `/portal/mfa/*`
+- Implement sliding window rate limiting backed by Redis
+- Return `Retry-After` header on 429 responses
+- Add rate limit metrics to Prometheus
+- Write tests simulating burst traffic
 
 ---
 
-## [Backend] Implement billing and invoicing system
+## [Backend] Improve error handling consistency across all controllers
 
 **Description:**
-Build complete billing workflow with invoice generation.
+Error handling is inconsistent — some controllers return plain strings, others return structured objects, and some do not forward errors to the central error handler.
 
 **Tasks:**
-- Create invoice generation engine
-- Implement line item calculation
-- Add insurance verification integration
-- Create billing code assignment (CPT, SNOMED)
-- Implement invoice PDF generation
-- Add payment tracking per invoice
-- Create billing analytics and reports
-- Implement recurring billing
-- Add credit note generation
-- Create billing dispute workflow
+- Audit all controllers for `try/catch` blocks that swallow errors
+- Create a shared `AppError` class with `statusCode`, `code`, and `message`
+- Replace ad-hoc error objects with `AppError` instances
+- Ensure all async route handlers use the `asyncHandler` wrapper
+- Add an integration test that verifies all error responses conform to the standard shape
+- Update the OpenAPI spec with error response schemas
 
-**Acceptance Criteria:**
-- Invoices generate correctly 100% of the time
-- Calculations verified against manual
-- Insurance verification success >90%
-- Payment tracking accurate
-
 ---
 
-## [Backend] Build immunization tracking system
+## [Backend] Add input validation to all POST/PATCH endpoints using Zod
 
 **Description:**
-Create comprehensive immunization schedule and tracking.
+Validation is inconsistent — some endpoints use Joi, some use custom validation, and some have no validation at all. The project should standardize on Zod.
 
 **Tasks:**
-- Implement CDC immunization schedule
-- Add vaccine conflict detection
-- Create immunity status calculation
-- Implement vaccination compliance tracking
-- Add immunization certificate generation
-- Create vaccine adverse event tracking
-- Implement vaccine lot number tracking
-- Add supply chain integration
-- Create immunization analytics
-- Implement immunization recalls handling
-
-**Acceptance Criteria:**
-- Tracks all recommended vaccines
-- Schedule recommendations accurate
-- Compliance reports generated correctly
-- Certificates meet state requirements
+- Audit all `*.validation.ts` files and identify non-Zod implementations
+- Create a `validate` middleware factory that accepts a Zod schema
+- Migrate the following to Zod: patients, encounters, appointments, payments, invoices
+- Add validation for query parameters (pagination, filters) in addition to bodies
+- Return 400 with a structured list of field errors on validation failure
+- Update OpenAPI generation to derive schemas from Zod
 
 ---
 
-## [Backend] Implement document management system
+## [Backend] Add idempotency key support to payment endpoints
 
 **Description:**
-Build document storage, retrieval, and management system.
+Network retries can cause duplicate payment submissions. Payment creation endpoints must support idempotency keys.
 
 **Tasks:**
-- Implement secure document upload
-- Create document versioning
-- Add document search capabilities
-- Implement document access control
-- Create document retention policies
-- Add document expiration handling
-- Implement document encryption
-- Create document audit trail
-- Add document preview generation
-- Implement OCR for document indexing
+- Accept `Idempotency-Key` header on `POST /payments`, `POST /payments/batch`, `POST /payments/recurring`
+- Store idempotency key → response mapping in Redis with a 24-hour TTL
+- Return the cached response if the same key is received again
+- Add a unique index on the idempotency key in MongoDB as a fallback
+- Document the idempotency behavior in the API docs
+- Write tests verifying duplicate requests return identical responses
 
-**Acceptance Criteria:**
-- Documents searchable by content
-- Access control enforced
-- Documents encrypted at rest
-- Document lifecycle managed
-
 ---
 
-## [Backend] Build provider scheduling system
+## [Backend] Implement webhook signature verification
 
 **Description:**
-Implement provider availability and scheduling.
+`webhooks.controller.ts` handles outbound webhooks, but incoming webhooks from external systems (e.g., Stellar payment events) may lack signature verification.
 
 **Tasks:**
-- Create provider availability calendar
-- Implement appointment slot generation
-- Add provider schedule templates
-- Create shift rotation support
-- Implement provider time-off management
-- Add on-call schedule support
-- Create schedule optimization algorithm
-- Implement schedule conflict detection
-- Add provider load balancing
-- Create scheduling reports and analytics
-
-**Acceptance Criteria:**
-- Schedules prevent overBooking
-- Availability updates real-time
-- Optimization reduces wait times
-- System handles 100+ providers
+- Add HMAC-SHA256 signature verification to the incoming webhook endpoint
+- Verify `X-Webhook-Signature` header on all incoming webhook requests
+- Return 401 if signature is missing or invalid
+- Add a secret rotation mechanism for webhook signing keys
+- Document how to configure webhook receivers
+- Write tests covering valid, invalid, and missing signatures
 
 ---
 
-## [Backend] Implement telehealth integration
+## [Backend] Add cursor-based pagination to the audit log endpoint
 
 **Description:**
-Add video conference capabilities for telemedicine appointments.
+The audit log can grow very large. The current implementation uses offset pagination, which degrades performance on large collections.
 
 **Tasks:**
-- Integrate video conference API (Zoom/Twilio)
-- Create meeting room generation
-- Implement secure meeting links
-- Add recording capabilities with consent
-- Create meeting transcription service
-- Implement chat during meetings
-- Add screen sharing support
-- Create meeting archive system
-- Implement bandwidth optimization
-- Add accessibility features (captions)
+- Add a compound index on `(clinicId, createdAt, _id)` to the audit log model
+- Implement cursor-based pagination using `_id` as the cursor
+- Accept `after` and `before` cursor parameters
+- Return `nextCursor` and `prevCursor` in the response
+- Add a test with 10,000+ audit entries verifying response time under 100ms
+- Update the OpenAPI spec and Postman collection
 
-**Acceptance Criteria:**
-- Video quality adapts to connection
-- Meetings recordable with audit trail
-- Accessibility features working
-- System handles 1000+ concurrent meetings
-
 ---
 
-## [Backend] Build notification system
+## [Backend] Implement clinic onboarding step validation
 
 **Description:**
-Implement multi-channel notification delivery.
+`clinics/onboarding.routes.ts` defines a multi-step onboarding flow, but the steps lack proper validation and progress tracking.
 
 **Tasks:**
-- Create notification center database
-- Implement email notification sending
-- Add SMS notification support
-- Implement in-app notifications
-- Create push notifications
-- Add notification scheduling
-- Implement notification preferences per user
-- Create notification templates system
-- Add notification delivery status tracking
-- Implement notification retries
+- Add a `onboardingStep` field to the clinic model tracking current step
+- Validate that steps are completed in order
+- Implement rollback: allow a clinic to return to a previous step
+- Send a welcome email when onboarding is complete
+- Add an admin endpoint to reset onboarding state for support purposes
+- Write tests for each onboarding step transition
 
-**Acceptance Criteria:**
-- Notifications delivered reliably
-- Delivery status tracked
-- User preferences respected
-- System handles 100k notifications/hour
-
 ---
 
-## [Backend] Implement reporting and analytics engine
+## [Backend] Add full-text search to patient and encounter records
 
 **Description:**
-Build comprehensive reporting and business intelligence.
+Clinics need to search patients by name, phone, or record number, and search encounter notes. MongoDB text indexes can provide this without an external search engine.
 
 **Tasks:**
-- Create report builder interface
-- Implement predefined report templates
-- Add custom query builder
-- Create dashboard widget system
-- Implement data aggregation pipeline
-- Add performance benchmarking reports
-- Create clinical outcome reports
-- Implement patient cohort analysis
-- Add predictive analytics
-- Create report export and scheduling
-
-**Acceptance Criteria:**
-- Reports generate in <10 seconds for 1M records
-- Custom queries support complex logic
-- Benchmarking data accurate
-- Predictive models validated
+- Add a compound text index to the patient model: `name`, `phone`, `nationalId`
+- Add a text index to the encounter model: `soapNotes`, `diagnosis`, `chiefComplaint`
+- Implement `GET /patients?q=<search>` and `GET /encounters?q=<search>` endpoints
+- Add relevance scoring and sort by score descending
+- Add tests for multi-word queries, partial matches, and empty results
+- Document search behavior and limitations in the API docs
 
 ---
 
-## [Backend] Build API key management system
+## [Backend] Implement medication drug interaction check in AI module
 
 **Description:**
-Implement API key generation and lifecycle management.
+`apps/api/src/modules/ai/ai.drug-interactions.test.ts` has tests but the implementation of real-time drug interaction checking is incomplete.
 
 **Tasks:**
-- Create API key generation mechanism
-- Implement key rotation policies
-- Add key usage tracking and analytics
-- Create key scope limitation
-- Implement key revocation
-- Add key expiration settings
-- Create key audit logging
-- Implement rate limits per key
-- Add key naming and organization
-- Create API key security best practices
+- Integrate with an open drug database (OpenFDA or RxNorm) or the Gemini API
+- Check interactions when a new medication is added to an encounter
+- Return severity levels: mild, moderate, severe, contraindicated
+- Trigger a CDS alert if a severe interaction is detected
+- Cache interaction responses for common drug pairs
+- Write unit tests for severity classification
 
-**Acceptance Criteria:**
-- Keys cannot be reused after rotation
-- Usage tracking accurate
-- Revocation immediate
-- Security practices documented
-
 ---
 
-## [Backend] Implement webhook system
+## [Backend] Implement pre-authorization request workflow
 
 **Description:**
-Create webhook delivery system for real-time event notifications.
+`apps/api/src/modules/pre-auth/pre-auth.controller.ts` manages insurance pre-authorization but the approval/denial workflow and notification integration are incomplete.
 
 **Tasks:**
-- Implement webhook registration UI
-- Create event filtering and routing
-- Add retry mechanism for failed deliveries
-- Implement webhook signature verification
-- Create delivery status dashboard
-- Add test webhook sending
-- Implement webhook templating
-- Create webhook rate limiting
-- Add delivery history and debugging
-- Implement webhook security practices
-
-**Acceptance Criteria:**
-- Webhooks delivered reliably
-- Failed deliveries retried with backoff
-- Signatures prevent spoofing
-- System handles 10k webhooks/sec
+- Implement state machine: `pending → submitted → approved/denied/more-info-needed`
+- Send notifications to clinic staff on status changes
+- Add a bulk submission endpoint for submitting multiple pre-auths at once
+- Integrate with the billing module to block claim submission without approval
+- Add an expiry date check (pre-auth often expires after 90 days)
+- Write integration tests for the full approval and denial flows
 
 ---
 
-## [Backend] Build real-time data synchronization
+## [Backend] Implement FHIR R4 export validation
 
 **Description:**
-Implement real-time data syncing across clients.
+`fhir-mapper.ts` maps internal models to FHIR resources, but there is no validation that the output conforms to the FHIR R4 specification.
 
 **Tasks:**
-- Create WebSocket connection management
-- Implement data change event streaming
-- Add presence/online status tracking
-- Create conflict resolution system
-- Implement state reconciliation
-- Add connection recovery mechanism
-- Create bandwidth optimization
-- Implement message batching
-- Add client reconnection logic
-- Create sync performance metrics
+- Add the `fhir-validator` or `fhir.js` library for schema validation
+- Validate all mapped resources before returning them in the export
+- Add a CI test that validates FHIR output against the R4 spec
+- Support FHIR Patient, Observation, Encounter, MedicationRequest, and Immunization resources
+- Document which FHIR profiles are supported
+- Log validation errors without exposing them to end users
 
-**Acceptance Criteria:**
-- Syncs propagate <500ms
-- Clients recover from disconnection
-- Conflicts resolved deterministically
-- System scales to 1000+ clients
-
 ---
 
-## [CI/CD] Implement GitHub Actions CI/CD pipeline
+## [Backend] Add telemetry for Stellar transaction success and failure rates
 
 **Description:**
-Set up comprehensive CI/CD pipeline for automated testing and deployment.
+`apps/stellar-service/src/metrics.ts` has a basic Prometheus client, but transaction-level metrics are missing.
 
 **Tasks:**
-- Create linting workflow for all code
-- Implement unit test runner with coverage reporting
-- Add integration test execution
-- Create E2E test runner with retries
-- Implement security scanning (SAST)
-- Add dependency vulnerability scanning
-- Create Docker image building and pushing
-- Implement deployment to staging environment
-- Add production deployment workflow with approval
-- Create rollback automation for failed deployments
-
-**Acceptance Criteria:**
-- All code checked with linters
-- Test coverage tracked and enforced
-- Security issues blocked deployment
-- Deployments fully automated
+- Add counters: `stellar_transactions_submitted_total`, `stellar_transactions_confirmed_total`, `stellar_transactions_failed_total`
+- Add histograms: `stellar_transaction_confirmation_duration_seconds`
+- Add gauges: `stellar_account_balance_xlm`, `stellar_network_fee_stroops`
+- Expose metrics at `/metrics` on the stellar-service
+- Add Grafana dashboard panels for the new metrics
+- Set up alert rules for high failure rates
 
 ---
 
-## [CI/CD] Add contract testing to pipeline
+## [Frontend] Implement real-time dashboard with WebSocket updates
 
 **Description:**
-Implement consumer-driven contract testing for API reliability.
+The dashboard page (`(dashboard)/page.tsx`) uses React Query for polling, but the `RealtimeProvider` and WebSocket infrastructure exist to push updates. The dashboard widgets should reflect live data.
 
 **Tasks:**
-- Set up Pact framework for contract tests
-- Create contract tests for API endpoints
-- Add consumer contract publishing
-- Implement provider verification
-- Create contract test CI/CD integration
-- Add contract breaking change detection
-- Implement contract versioning
-- Create contract contract report dashboard
-- Add contract testing documentation
-- Implement contract-driven development
+- Connect the dashboard to the WebSocket room for the current clinic
+- Subscribe to: new patient registrations, appointment status changes, payment confirmations
+- Update `StatCard`, `AppointmentWidget`, and `RecentTable` in real time without page refresh
+- Add a connection status indicator using `LazyRealtimeProvider`
+- Gracefully fall back to polling when WebSocket is unavailable
+- Write a Playwright test verifying live updates
 
-**Acceptance Criteria:**
-- Consumer contracts validated before merge
-- Provider contracts verified for compatibility
-- Breaking changes detected automatically
-- Contract metrics tracked
-
 ---
 
-## [CI/CD] Implement performance testing pipeline
+## [Frontend] Build patient detail page with all clinical tabs
 
 **Description:**
-Add automated performance testing to CI/CD.
+`apps/web/src/app/patients/[id]` exists as a directory but the tabbed patient detail view (encounters, lab results, medications, care plans, immunizations, consent, insurance) may have incomplete tabs.
 
 **Tasks:**
-- Set up performance testing framework (k6)
-- Create performance test scenarios
-- Implement load testing (50, 100, 500 concurrent users)
-- Add stress testing (ramp up to failure)
-- Create performance regression detection
-- Implement baseline comparisons
-- Add performance metrics dashboard
-- Create performance SLA enforcement
-- Implement performance optimization suggestions
-- Add performance reports to PR reviews
-
-**Acceptance Criteria:**
-- Performance tests run on every PR
-- Regressions detected automatically
-- Performance metrics tracked over time
-- Bottlenecks identified
+- Audit each tab component for completeness
+- Complete `LabResultsTab.tsx`: add trend charts and critical value highlighting
+- Complete `CarePlanTab.tsx`: add goal tracking and task completion UI
+- Add `MedicationsTab.tsx` if missing, displaying current medications with interaction warnings
+- Add `ImmunizationsTab.tsx` pulling from the immunizations module
+- Ensure all tabs are lazy-loaded for performance
 
 ---
 
-## [CI/CD] Add security scanning to pipeline
+## [Frontend] Implement dark mode across all pages
 
 **Description:**
-Implement automated security vulnerability detection.
+`ThemeToggle.tsx` and `ThemeSync.tsx` exist, and `e2e/dark-mode.spec.ts` has tests, but dark mode styles may be incomplete for many components.
 
 **Tasks:**
-- Set up SAST (static analysis) scanning
-- Add DAST (dynamic analysis) scanning
-- Implement dependency scanning with vulnerability database
-- Create container image scanning
-- Add secrets scanning (prevent credential commits)
-- Implement license compliance checking
-- Add OWASP top 10 checks
-- Create security report aggregation
-- Implement security metrics dashboard
-- Add security remediation guidance
+- Audit all Tailwind classes for hardcoded colors that don't use the `dark:` variant
+- Add `dark:` variants to: payment tables, patient cards, CDS panels, encounter forms
+- Verify dark mode in the portal subsection
+- Test dark mode on charts (`VitalSignsChart`, `PaymentAnalyticsCharts`)
+- Add a dark mode screenshot to the README
+- Ensure the user's preference persists across sessions via `localStorage`
 
-**Acceptance Criteria:**
-- All security issues detected
-- Critical issues block deployment
-- False positives minimized
-- Remediation guidance provided
-
 ---
 
-## [CI/CD] Implement database migration testing
+## [Frontend] Add skeleton loading states to all data-fetching components
 
 **Description:**
-Add automated testing for database migrations.
+Some components show a blank screen or spinner while loading. Skeleton loaders improve perceived performance and reduce layout shift.
 
 **Tasks:**
-- Create migration test framework
-- Implement migration dry-run validation
-- Add migration rollback testing
-- Create data integrity checks post-migration
-- Implement migration performance benchmarking
-- Add migration compatibility verification
-- Create migration conflict detection
-- Implement migration documentation generation
-- Add migration checklist automation
-- Create migration runbook generation
+- Audit all `Client` components for loading state handling
+- Replace generic spinners in `PatientsClient`, `EncountersClient`, `PaymentsClient`, `AppointmentsClient` with skeleton loaders using `Skeleton.tsx`
+- Add skeleton states to the dashboard stat cards and recent tables
+- Add skeleton to the wallet balance display
+- Write Storybook stories (or inline visual tests) for skeleton states
+- Verify there is no CLS (cumulative layout shift) when data loads
 
-**Acceptance Criteria:**
-- All migrations tested before deploy
-- Rollbacks verified
-- Data integrity checked
-- Performance impact assessed
-
 ---
 
-## [CI/CD] Add end-to-end testing suite
+## [Frontend] Implement patient import from CSV
 
 **Description:**
-Implement comprehensive E2E testing with Playwright.
+`PatientImport.tsx` exists but the actual CSV parsing, field mapping, and validation UI may be incomplete.
 
 **Tasks:**
-- Create E2E test suite for major user flows
-- Implement login and authentication tests
-- Add patient management workflow tests
-- Create appointment scheduling tests
-- Implement payment flow tests
-- Add accessibility testing (Axe)
-- Create visual regression testing
-- Implement mobile responsiveness testing
-- Add E2E test parallelization
-- Create E2E test report dashboard
-
-**Acceptance Criteria:**
-- Critical workflows tested end-to-end
-- Tests run in <10 minutes
-- Mobile tests pass on iOS and Android
-- Accessibility issues caught
+- Implement CSV parsing with preview (show first 5 rows before import)
+- Add a column mapping step: map CSV columns to patient fields
+- Validate required fields and flag duplicates before submission
+- Show a progress bar and per-row result after import
+- Add support for both comma and semicolon delimiters
+- Write tests for the parsing and validation logic
 
 ---
 
-## [CI/CD] Implement Docker build optimization
+## [Frontend] Complete the disputes management page
 
 **Description:**
-Optimize Docker image building for faster CI/CD.
+`apps/web/src/app/disputes/page.tsx` exists but may lack full CRUD operations and status tracking for payment disputes.
 
 **Tasks:**
-- Implement multi-stage builds for smaller images
-- Create base image with common dependencies
-- Add layer caching optimization
-- Implement Docker buildkit for faster builds
-- Create image size optimization
-- Add build time tracking and alerts
-- Implement image vulnerability scanning
-- Add image registry cleanup automation
-- Create image tagging strategy
-- Implement image pull through caching
+- Implement dispute list view with filtering by status and date range
+- Add dispute filing form using `DisputeFilingForm.tsx`
+- Show dispute timeline and document attachments
+- Implement resolution actions: accept, reject, counter-offer
+- Add export to CSV/PDF for dispute records
+- Write Playwright E2E test for the full dispute lifecycle
 
-**Acceptance Criteria:**
-- Docker builds complete in <5 minutes
-- Image sizes optimized
-- Caching reduces rebuild time
-- Registry stays clean
-
 ---
 
-## [CI/CD] Add deployment monitoring and alerting
+## [Frontend] Implement offline mode with service worker sync
 
 **Description:**
-Implement monitoring and alerting for deployed applications.
+`apps/web/public/sw.js` and `apps/web/e2e/offline.spec.ts` exist, and `PWA_OFFLINE_POLICY.md` documents the strategy. The full sync queue may not be implemented.
 
 **Tasks:**
-- Set up application performance monitoring (APM)
-- Create error rate alerts
-- Add latency alerts
-- Implement uptime monitoring
-- Create health check automation
-- Add deployment verification
-- Implement log aggregation and analysis
-- Create alerting dashboard
-- Add incident response automation
-- Implement deployment rollback on critical errors
-
-**Acceptance Criteria:**
-- Issues detected within 1 minute
-- Automatic alerts to on-call engineer
-- Deployment health verified
-- False alerts minimized
+- Implement `SyncQueueStatus.tsx` to show pending sync items to the user
+- Queue patient registration and encounter creation when offline
+- Sync queued operations when connectivity is restored
+- Handle merge conflicts (server state changed while offline)
+- Test offline behavior with Playwright's `page.route()` network interception
+- Add a visual indicator when data may be stale due to offline period
 
 ---
 
-## [DevOps] Set up Kubernetes deployment manifests
+## [Frontend] Add comprehensive form validation with inline error messages
 
 **Description:**
-Create Kubernetes deployment configuration for production.
+Forms like `CreatePatientForm.tsx`, `EncounterForm.tsx`, and `PaymentIntentForm.tsx` may lack real-time inline validation feedback.
 
 **Tasks:**
-- Create deployment manifests for all services
-- Implement resource limits and requests
-- Add health checks and liveness probes
-- Create horizontal pod autoscaling
-- Implement ingress configuration
-- Add persistent volume claims for databases
-- Create network policies for security
-- Implement RBAC for service accounts
-- Add monitoring and logging sidecars
-- Create disaster recovery procedures
+- Add `react-hook-form` + Zod resolver to all major forms if not already present
+- Show field-level error messages below each input on blur
+- Add a summary error banner at the top of the form for submit failures
+- Highlight required fields clearly
+- Disable the submit button while submission is in progress
+- Add ARIA `aria-invalid` and `aria-describedby` attributes for accessibility
 
-**Acceptance Criteria:**
-- All services deployable to Kubernetes
-- Auto-scaling works correctly
-- Network policies restrict traffic
-- Disaster recovery tested
-
 ---
 
-## [DevOps] Implement infrastructure as code (Terraform)
+## [Frontend] Add confirm dialog before destructive actions
 
 **Description:**
-Create Terraform code for reproducible infrastructure.
+Destructive actions (delete patient, void payment, cancel appointment) currently execute without a confirmation step, risking accidental data loss.
 
 **Tasks:**
-- Write Terraform modules for networking
-- Create database infrastructure modules
-- Implement load balancing configuration
-- Add SSL/TLS certificate automation
-- Create backup and disaster recovery
-- Implement monitoring stack deployment
-- Add logging infrastructure
-- Create secrets management
-- Implement environment-specific configurations
-- Add state file security and locking
-
-**Acceptance Criteria:**
-- Infrastructure fully defined in code
-- Environments reproducible from code
-- Changes tracked via Git
-- State file secure
+- Create a reusable `ConfirmDialog` component that accepts a message and destructive label
+- Add confirmation to: delete patient, void/cancel payment, remove encounter, cancel appointment
+- Require typing the item name (e.g., patient full name) for permanent deletions
+- Animate the dialog using CSS transitions
+- Write unit tests for the dialog component
+- Add Playwright tests verifying the dialogs block accidental deletion
 
 ---
 
-## [DevOps] Set up monitoring and observability
+## [Frontend] Improve the encounter SOAP notes editor
 
 **Description:**
-Implement comprehensive monitoring and logging system.
+`SoapNotesEditor.tsx` is a basic textarea-based editor. Clinical staff need richer formatting options and auto-save.
 
 **Tasks:**
-- Set up Prometheus for metrics collection
-- Implement Grafana dashboards
-- Add centralized logging (ELK/Splunk)
-- Create custom application metrics
-- Implement distributed tracing
-- Add performance profiling
-- Create alert rules and thresholds
-- Implement on-call rotation
-- Add incident response automation
-- Create observability best practices guide
+- Add auto-save every 30 seconds with a "Saved" indicator
+- Add basic markdown/rich text formatting (bold, lists, headers)
+- Add `@mention` support to reference other encounters or patients
+- Add keyboard shortcuts (Ctrl+S to save, Ctrl+B for bold)
+- Integrate with the AI transcription feature to populate fields from voice
+- Add conflict detection if another user edits the same encounter
 
-**Acceptance Criteria:**
-- All metrics collected and visualized
-- Logs searchable and retained
-- Traces show performance bottlenecks
-- Alerts actionable
-
 ---
 
-## [DevOps] Implement secrets management
+## [Frontend] Build a comprehensive payment analytics dashboard
 
 **Description:**
-Create secure secrets management system.
+`apps/web/src/app/payments/analytics/` directory exists but the analytics UI may be minimal. Clinics need detailed financial insights.
 
 **Tasks:**
-- Set up HashiCorp Vault or AWS Secrets Manager
-- Implement secrets rotation policies
-- Add automatic secret injection
-- Create audit logging for secret access
-- Implement least privilege access
-- Add secrets validation
-- Create secrets migration procedure
-- Implement disaster recovery for secrets
-- Add secrets monitoring
-- Create secrets management documentation
-
-**Acceptance Criteria:**
-- All secrets encrypted at rest and in transit
-- Rotation automated
-- Access audited
-- No secrets in code/logs
+- Add charts: revenue over time, payment method breakdown, top diagnoses by revenue
+- Add a KPI row: total collected, outstanding, refunded, disputed
+- Implement date range filtering (7d, 30d, 90d, custom)
+- Add a table showing payment-to-encounter linkage
+- Export analytics data to CSV and PDF
+- Ensure all charts use accessible color palettes and have legends
 
 ---
 
-## [DevOps] Build disaster recovery procedures
+## [Frontend] Implement notifications center with read/unread state
 
 **Description:**
-Implement and test disaster recovery plans.
+`apps/web/src/app/notifications/page.tsx` and `NotificationBell.tsx` exist, but the full notifications center with categorization and bulk actions may be incomplete.
 
 **Tasks:**
-- Create database backup and restore procedures
-- Implement backup encryption and verification
-- Add geo-redundant backup storage
-- Create failover automation
-- Implement recovery time objective (RTO) testing
-- Add recovery point objective (RPO) monitoring
-- Create runbooks for common failures
-- Implement regular DR drills
-- Add data integrity verification
-- Create incident communication procedures
+- Show notifications grouped by type: appointment, payment, lab result, system alert
+- Add mark all as read, mark single as read, and delete actions
+- Add real-time delivery via WebSocket
+- Add a badge count on the navbar bell icon
+- Add deep links: clicking a notification navigates to the relevant resource
+- Write tests for the unread count logic
 
-**Acceptance Criteria:**
-- Backups verified regularly
-- Restore tested monthly
-- RTO and RPO met
-- All staff trained on procedures
-
 ---
 
-## [DevOps] Implement cost optimization
+## [Frontend] Add print-friendly layout for encounter notes and invoices
 
 **Description:**
-Reduce infrastructure costs through optimization.
+Clinical staff need to print encounter notes and invoices for patients. There are no print-specific styles or print preview pages.
 
 **Tasks:**
-- Implement resource utilization analysis
-- Create right-sizing recommendations
-- Add reserved instance purchasing
-- Implement spot instance usage
-- Create data storage optimization
-- Add unused resource cleanup
-- Implement cross-region cost optimization
-- Create cost allocation and tracking
-- Add budget alerts and controls
-- Implement cost optimization review process
+- Add `@media print` styles to encounter detail and invoice pages
+- Hide navigation, sidebar, and interactive elements in print view
+- Add a "Print" button that triggers `window.print()`
+- For invoices, generate a PDF using the API's `pdf-generator.service.ts`
+- Ensure the printed layout conforms to standard A4 paper
+- Test in Chrome and Firefox print preview
 
-**Acceptance Criteria:**
-- Monthly cost reduced by 20%
-- Utilization >80%
-- Budgets enforced
-- Cost reporting automated
-
 ---
 
-## [DevOps] Set up CDN and caching strategy
+## [Frontend] Add patient photo upload and display
 
 **Description:**
-Implement CDN for static assets and caching optimization.
+`apps/web/src/components/patients/PhotoUpload.tsx` exists, but the integration into the patient detail header and list views may be incomplete.
 
 **Tasks:**
-- Configure CloudFront/Cloudflare CDN
-- Implement cache invalidation API
-- Add versioned asset naming
-- Create cache control headers
-- Implement compression (gzip, brotli)
-- Add image optimization
-- Create cache hit ratio monitoring
-- Implement origins failover
-- Add DDoS protection
-- Create CDN performance reports
-
-**Acceptance Criteria:**
-- Static assets cached effectively
-- Page load times improved 50%
-- Cache hit ratio >95%
-- Cost savings 30%
+- Show patient photo in the patient detail page header
+- Show patient thumbnail in the patients list (`PatientThumbnail.tsx`)
+- Implement crop-and-resize before upload (client-side, using `canvas`)
+- Add a fallback avatar with initials when no photo is set
+- Respect the 2MB size limit and show a friendly error if exceeded
+- Write a test for the upload flow including error states
 
 ---
 
-## [DevOps] Implement backup and disaster recovery automation
+## [Frontend] Implement ICD-10 favorites and recent codes
 
 **Description:**
-Automate backup processes and disaster recovery testing.
+`ICD10Search.tsx` exists but the favorites and recent codes feature (`icd10-favorites.service.ts`) may not be fully wired to the frontend.
 
 **Tasks:**
-- Create automated backup scheduling
-- Implement backup verification
-- Add backup encryption
-- Create incremental backup strategy
-- Implement backup retention policies
-- Add backup storage redundancy
-- Create automated DR testing
-- Implement backup monitoring and alerting
-- Add backup cost optimization
-- Create backup runbook documentation
+- Show a "Favorites" and "Recent" tab in the ICD-10 search dropdown
+- Add a star/bookmark icon to favorite a code
+- Sync favorites with the backend (`/icd10/favorites`)
+- Show up to 10 recent codes in the search dropdown before typing
+- Add keyboard navigation through search results
+- Write unit tests for the favorites toggle logic
 
-**Acceptance Criteria:**
-- Backups complete daily
-- Verification passes 100%
-- Recovery tested monthly
-- Cost monitored
-
 ---
 
-## [Refactoring] Implement logging and tracing framework
+## [Frontend] Add accessibility audit and fix violations
 
 **Description:**
-Standardize logging and distributed tracing across the application.
+`apps/web/tests/accessibility.spec.ts` has Playwright accessibility tests. The audit likely reveals violations that need fixing.
 
 **Tasks:**
-- Implement pino logger configuration
-- Create structured logging format
-- Add correlation IDs to requests
-- Implement log levels management
-- Add sensitive data redaction
-- Create distributed tracing with OpenTelemetry
-- Implement trace sampling
-- Add performance metrics to traces
-- Create logging best practices guide
-- Implement log aggregation integration
-
-**Acceptance Criteria:**
-- All components use consistent logging
-- Logs searchable and structured
-- Traces show service interactions
-- Debugging improved significantly
+- Run the existing accessibility tests and document all violations
+- Fix all critical (WCAG 2.1 AA) violations first
+- Ensure all form inputs have associated labels
+- Ensure all images have descriptive `alt` text
+- Verify keyboard-only navigation works on all modals and dropdowns
+- Add `aria-live` regions for dynamic content updates (notifications, toasts)
 
 ---
 
-## [Refactoring] Refactor API routes for consistency
+## [Frontend] Implement schedule/calendar management for clinic staff
 
 **Description:**
-Standardize API endpoint naming and structure.
+`ScheduleCalendar.tsx` and `SchedulingCalendar.tsx` exist, but the calendar may lack drag-and-drop, slot management, and conflict detection.
 
 **Tasks:**
-- Audit all existing API routes
-- Create API versioning strategy
-- Standardize route naming conventions
-- Implement consistent error responses
-- Add request/response validation
-- Create OpenAPI specification
-- Standardize pagination
-- Implement consistent sorting
-- Add filtering best practices
-- Create route documentation
+- Implement a weekly view showing all staff schedules
+- Add drag-and-drop to reschedule appointments
+- Show slot availability: free, booked, blocked
+- Allow staff to block time off directly on the calendar
+- Highlight double-booking conflicts in red
+- Sync calendar state with the backend via React Query mutations
 
-**Acceptance Criteria:**
-- All routes follow conventions
-- API versioning implemented
-- OpenAPI spec complete
-- Deprecation path clear
-
 ---
 
-## [Refactoring] Extract shared utilities library
+## [Frontend] Add deep link support for portal patients
 
 **Description:**
-Create shared utility functions and helpers.
+The patient portal (`apps/web/src/app/portal/`) has dedicated pages, but sharing a direct link to a specific document, appointment, or encounter may not work correctly due to auth redirects.
 
 **Tasks:**
-- Identify duplicated code across projects
-- Create shared utilities package
-- Extract validation functions
-- Extract formatting functions
-- Create date/time utilities
-- Extract error handling utilities
-- Create authentication utilities
-- Extract API client helpers
-- Create data transformation utilities
-- Document utility usage and examples
-
-**Acceptance Criteria:**
-- Code duplication reduced 30%
-- Utilities well-tested
-- Usage documented
-- Versioning strategy clear
+- Store the intended URL before redirecting to portal login
+- Redirect to the original URL after successful portal authentication
+- Add Open Graph meta tags for shareable portal pages
+- Test deep links for: appointments, encounters, payments, and documents
+- Ensure portal deep links do not expose admin routes
 
 ---
 
-## [Refactoring] Refactor payments module architecture
+## [Frontend] Add language switcher to portal pages
 
 **Description:**
-Improve payments module structure and maintainability.
+`LanguageSwitcher.tsx` exists but may not be present on all portal pages. The portal serves patients who may prefer Yoruba, French, Hausa, or Portuguese.
 
 **Tasks:**
-- Audit current payment implementation
-- Create payment state machine
-- Implement payment providers abstraction
-- Extract payment validation logic
-- Create payment event handlers
-- Implement payment reconciliation service
-- Add payment error handling
-- Create payment test fixtures
-- Document payment architecture
-- Implement payment metrics and analytics
+- Add the language switcher to the portal layout (`portal/layout.tsx`)
+- Ensure all portal pages have complete translations in all 5 languages (en, fr, yo, ha, pt)
+- Run `scripts/check-translations.ts` and fix any missing keys
+- Add a language preference to the patient portal profile
+- Test right-to-left support if Arabic is planned in the future
 
-**Acceptance Criteria:**
-- Architecture cleaner and documented
-- Payment flows more testable
-- New providers easy to add
-- Payment errors reduced
-
 ---
 
-## [Refactoring] Extract encounter module optimization
+## [Frontend] Implement settings and profile page
 
 **Description:**
-Optimize encounter module performance and structure.
+`.kiro/specs/settings-profile/` is defined. The `ClinicSettingsClient.tsx` and settings components exist, but the full profile management (avatar, display name, timezone, notifications preferences) may be incomplete.
 
 **Tasks:**
-- Profile encounter queries for optimization
-- Implement query result caching
-- Create lazy loading for encounter data
-- Add pagination for large datasets
-- Optimize database indexes
-- Implement data aggregation pipeline
-- Create encounter search optimization
-- Implement encounter export performance
-- Add encounter analytics optimization
-- Create performance benchmarks
-
-**Acceptance Criteria:**
-- Encounter queries 50% faster
-- Lazy loading reduces load times
-- Search scales to 1M encounters
-- Analytics queries complete in <5 seconds
+- Complete `ProfileSection.tsx`: add avatar upload, display name, timezone
+- Complete `PreferencesSection.tsx`: notification preferences, default view, language
+- Add an "Active sessions" panel using `SessionManagement.tsx`
+- Add a "Danger zone" section: deactivate account
+- Ensure all changes persist via the API and reflect immediately in the UI
+- Write Playwright tests for each settings section
 
 ---
 
-## [Refactoring] Implement dependency injection pattern
+## [Frontend] Add visual regression tests using Playwright screenshots
 
 **Description:**
-Refactor to use dependency injection for testability.
+`apps/web/e2e/visual-regression.spec.ts` exists but may have limited coverage. Visual regressions in the UI design system go undetected.
 
 **Tasks:**
-- Create DI container setup
-- Implement service registration
-- Refactor services to use DI
-- Remove global state dependencies
-- Implement mock services for testing
-- Create DI configuration documentation
-- Add DI validation
-- Implement service lifecycle management
-- Add DI best practices guide
-- Refactor API routes to use DI
+- Add screenshot tests for: login page, dashboard, patient detail, encounter form, payment table
+- Use Playwright's `toMatchSnapshot` with a tolerance threshold
+- Store baseline screenshots in version control
+- Add a CI step to fail on visual regressions
+- Document how to update baselines when intentional UI changes are made
 
-**Acceptance Criteria:**
-- All services injectable
-- Testing improved
-- Coupling reduced
-- Documentation complete
-
 ---
 
-## [Refactoring] Refactor component hierarchy and props
+## [Design] Create and publish a design system documentation page
 
 **Description:**
-Optimize React component structure for reusability.
+`UI Designs/` contains Figma links. The component library (`apps/web/src/components/ui/`) has many components but no design system documentation page for contributors.
 
 **Tasks:**
-- Audit component hierarchy
-- Extract presentational components
-- Implement prop validation with TypeScript
-- Remove prop drilling
-- Implement context providers
-- Create custom hooks for logic
-- Optimize re-renders
-- Implement component composition patterns
-- Create component usage guide
-- Document component APIs
+- Create a `design-system` page or Storybook showing all UI components with variants
+- Document `Button` (all variants), `Input`, `Modal`, `Toast`, `Badge`, `Card`, `Table`
+- Show the color palette, typography scale, and spacing tokens
+- Document WCAG color contrast compliance for each color pair
+- Publish to GitHub Pages as part of the docs workflow
 
-**Acceptance Criteria:**
-- Components reusable across app
-- Props clearly typed
-- Re-renders optimized
-- Testing improved
-
 ---
 
-## [Refactoring] Extract and standardize error handling
+## [Design] Implement design tokens as CSS custom properties
 
 **Description:**
-Implement consistent error handling across all layers.
+Tailwind configuration defines colors and spacing, but design tokens are not available as CSS custom properties, making it harder to implement custom themes (e.g., white-label clinic branding).
 
 **Tasks:**
-- Create error hierarchy
-- Implement error serialization
-- Create error boundary component
-- Implement API error response formatter
-- Add error context to exceptions
-- Create error recovery strategies
-- Implement error logging
-- Create error user messages
-- Add error metrics tracking
-- Implement error debugging utilities
-
-**Acceptance Criteria:**
-- All errors follow same format
-- User error messages helpful
-- Developer error info sufficient
-- Error tracking working
+- Extract core design tokens from `tailwind.config.ts` into `globals.css` as CSS custom properties
+- Support: color palette, spacing, border radius, font sizes, shadows
+- Allow clinics to override tokens via their settings (custom primary color)
+- Test that overriding tokens propagates correctly to all components
+- Document the theming system for contributors
 
 ---
 
-## [Refactoring] Standardize data validation
+## [Design] Redesign the mobile navigation for small screens
 
 **Description:**
-Implement consistent validation across API and UI.
+`MobileNavigation.tsx` and `MobileNavigationDrawer.tsx` exist, but the mobile UX may not be optimized per the `MOBILE_RESPONSIVE_GUIDE.md` guidelines.
 
 **Tasks:**
-- Audit existing validation code
-- Implement shared validation rules
-- Create validation schema definitions
-- Implement form validation
-- Add API validation
-- Create validation error formatting
-- Implement async validation
-- Add custom validation rules
-- Create validation testing
-- Document validation approach
+- Audit the navigation on screens 320px–768px wide
+- Implement a bottom tab bar for the most common actions (Dashboard, Patients, Appointments, Payments)
+- Add a slide-over drawer for secondary navigation
+- Ensure touch targets are at least 44×44px
+- Add swipe gestures to open/close the drawer
+- Test on iOS Safari and Android Chrome using BrowserStack or local device
 
-**Acceptance Criteria:**
-- Validation consistent everywhere
-- Invalid data cannot be saved
-- Validation errors user-friendly
-- Validation easily extended
-
 ---
 
-## [Refactoring] Extract modal and dialog components
+## [Design] Improve empty state designs across the application
 
 **Description:**
-Create reusable modal and dialog component system.
+`EmptyState.tsx` is a generic component, but many empty states across the app use plain text or minimal UI, missing opportunities to guide users to take action.
 
 **Tasks:**
-- Create modal component library
-- Implement dialog state management
-- Add accessible focus management
-- Create modal animation system
-- Implement keyboard shortcuts
-- Add modal event handling
-- Create modal responsive behavior
-- Implement modal stacking
-- Add modal testing utilities
-- Document modal usage patterns
-
-**Acceptance Criteria:**
-- Modals follow accessibility guidelines
-- Consistent behavior across app
-- Easy to create new modals
-- Keyboard navigation working
+- Audit all empty states: patients list, encounters, appointments, payments, notifications
+- Add descriptive illustration or icon to each empty state
+- Add a call-to-action button ("Add patient", "Schedule appointment", etc.)
+- Ensure empty states are distinct from loading states and error states
+- Add i18n strings for all empty state messages
+- Document the empty state design pattern in the design system
 
 ---
 
-## [Refactoring] Optimize bundle size
+## [Design] Add loading and error states to all page-level components
 
 **Description:**
-Reduce JavaScript bundle size for faster loading.
+Next.js 14 supports `loading.tsx` and `error.tsx` at the route level, but many routes do not have these files.
 
 **Tasks:**
-- Analyze current bundle size
-- Implement code splitting by route
-- Add lazy loading for components
-- Implement tree shaking
-- Remove unused dependencies
-- Optimize chart library usage
-- Implement compression
-- Add bundle size monitoring
-- Create bundle size budget
-- Implement performance metrics
+- Audit all route directories in `apps/web/src/app/` for missing `loading.tsx` and `error.tsx`
+- Add `loading.tsx` with a skeleton matching the page layout for: encounters, appointments, patients, payments, reports
+- Add `error.tsx` with a clear message and a retry button for all major routes
+- Ensure the global `error.tsx` and `global-error.tsx` show user-friendly messages
+- Write tests verifying error boundaries catch thrown errors
 
-**Acceptance Criteria:**
-- Bundle size reduced 30%
-- Initial load <2 seconds
-- Core bundle <100KB
-- Metrics tracked
-
 ---
 
-## [Testing] Implement unit test coverage improvements
+## [Design] Add data visualization to the reports page
 
 **Description:**
-Increase test coverage to 80%+ across all modules.
+`apps/web/src/app/reports/page.tsx` is a large file (13KB) but may lack rich charts and interactive filtering.
 
 **Tasks:**
-- Identify untested code
-- Write unit tests for utilities
-- Add tests for service methods
-- Write tests for API routes
-- Add tests for React components
-- Create test fixtures
-- Implement mocking strategies
-- Add test performance optimization
-- Create test best practices guide
-- Implement coverage thresholds in CI/CD
-
-**Acceptance Criteria:**
-- Overall coverage >80%
-- Critical paths 100% covered
-- Coverage tracked per module
-- PR blocked if coverage decreases
+- Add a chart for: encounters per day/week/month, revenue trend, top diagnoses
+- Add interactive filters: date range, provider, clinic branch
+- Use `recharts` or `chart.js` (check existing usage in `charts/`)
+- Add a "download as image" button for each chart
+- Ensure charts are keyboard-accessible and have text alternatives
+- Add export to PDF for the full report
 
 ---
 
-## [Testing] Create integration test suite
+## [Refactoring] Split large controller files into service + controller
 
 **Description:**
-Build comprehensive integration tests for major workflows.
+Several controller files are extremely large and contain business logic that should live in services: `payments.controller.ts` (63KB), `patients.controller.ts` (57KB), `ai.routes.ts` (32KB), `portal.controller.ts` (27KB).
 
 **Tasks:**
-- Create test database setup
-- Implement test data factories
-- Write patient management flow tests
-- Add appointment scheduling tests
-- Create payment processing tests
-- Implement authentication tests
-- Add multi-service interaction tests
-- Create test cleanup procedures
-- Implement test parallelization
-- Add integration test reporting
+- Extract business logic from `payments.controller.ts` into `payments.service.ts`
+- Extract business logic from `patients.controller.ts` into `patients.service.ts`
+- Extract AI route handlers into an `ai.controller.ts` and `ai.service.ts`
+- Ensure controller methods delegate to services and handle only HTTP concerns
+- Verify all existing tests still pass after the split
+- Add JSDoc comments to all exported service methods
 
-**Acceptance Criteria:**
-- Major workflows tested
-- Tests reliable and fast
-- Failures indicate real issues
-- Reports show coverage
-
 ---
 
-## [Testing] Implement accessibility testing
+## [Refactoring] Consolidate duplicate toast/notification utilities
 
 **Description:**
-Ensure application meets WCAG 2.1 AA standards.
+`apps/web/src/components/ui/Toast.tsx` and `apps/web/src/components/ui/toast.tsx` (note the casing) appear to be duplicates. Inconsistent imports cause confusion.
 
 **Tasks:**
-- Audit components for accessibility issues
-- Implement Axe accessibility testing
-- Add keyboard navigation testing
-- Create screen reader testing
-- Add focus management testing
-- Implement color contrast testing
-- Add form label testing
-- Create accessibility test automation
-- Add accessibility metrics tracking
-- Create accessibility remediation guide
-
-**Acceptance Criteria:**
-- All pages pass Axe scanning
-- Keyboard navigation complete
-- Screen reader compatible
-- WCAG AA compliance verified
+- Identify which file is the canonical implementation
+- Migrate all imports to the canonical file
+- Delete the duplicate
+- Add a lint rule preventing duplicate component names
+- Write tests to verify toast appears and disappears correctly
+- Check for similar duplication in other UI components
 
 ---
 
-## [Testing] Add visual regression testing
+## [Refactoring] Replace inline styles with Tailwind utility classes
 
 **Description:**
-Detect unintended UI changes automatically.
+Some components use inline `style={{}}` props for layout, breaking the consistent Tailwind approach and making responsive design harder.
 
 **Tasks:**
-- Set up visual regression framework
-- Create baseline screenshots
-- Implement diff comparison
-- Add approval workflow
-- Create cross-browser testing
-- Implement responsive design testing
-- Add dark mode testing
-- Create visual regression CI integration
-- Add mobile screenshot capture
-- Implement visual metrics tracking
+- Run a grep for `style={{` across `apps/web/src/`
+- Replace inline styles with equivalent Tailwind classes where possible
+- For dynamic values (e.g., variable widths), use CSS custom properties within Tailwind
+- Remove any `!important` overrides that were added as workarounds
+- Run visual regression tests after changes to verify nothing broke
 
-**Acceptance Criteria:**
-- Visual changes detected automatically
-- False positives minimal
-- Approval workflow efficient
-- All major pages covered
-
 ---
 
-## [Testing] Build mutation testing framework
+## [Refactoring] Migrate remaining CommonJS `require()` to ES module imports
 
 **Description:**
-Improve test quality through mutation testing.
+Several configuration files use `require()` (e.g., `jest.config.js`, `migrate-mongo-config.js`). The project is TypeScript-first and should use ES module syntax consistently.
 
 **Tasks:**
-- Set up Stryker mutation testing
-- Configure mutation operators
-- Create baseline mutation score
-- Implement mutation test CI integration
-- Add mutation score tracking
-- Create mutation killing best practices
-- Implement incremental mutation testing
-- Add mutation report generation
-- Create mutation testing documentation
-- Implement mutation score enforcement
+- Identify all `.js` files using `require()`
+- Migrate `jest.config.js` files to `jest.config.ts` where possible
+- Migrate `eslint.config.js` to use `import` syntax
+- Ensure the build pipeline handles the change correctly
+- Update the contributing guide to note ES modules as the standard
 
-**Acceptance Criteria:**
-- Mutation score >80%
-- Weak tests identified and fixed
-- Mutation testing in CI/CD
-- Metrics tracked
-
 ---
 
-## [Security] Implement OWASP Top 10 protections
+## [Refactoring] Extract shared date/time utilities into `packages/utils`
 
 **Description:**
-Address OWASP Top 10 vulnerabilities systematically.
+Date formatting and manipulation logic is duplicated across the API, web, and stellar-service. A shared `packages/utils` package would eliminate this duplication.
 
 **Tasks:**
-- Implement SQL injection prevention
-- Add XSS protection measures
-- Implement CSRF token validation
-- Add broken authentication fixes
-- Implement data exposure prevention
-- Add XML external entity (XXE) prevention
-- Implement broken access control checks
-- Add insecure deserialization prevention
-- Implement vulnerable dependency scanning
-- Create security configuration review
-
-**Acceptance Criteria:**
-- All OWASP risks addressed
-- Security tests passing
-- Vulnerabilities resolved quickly
-- Security scanning automated
+- Create `packages/utils/` with a `package.json` and TypeScript config
+- Move date formatting, timezone conversion, and relative time functions from each app into the package
+- Update all import sites to use the shared package
+- Add unit tests to the `utils` package
+- Export from `packages/types/src/index.ts` if relevant types are involved
 
 ---
 
-## [Security] Implement HIPAA compliance controls
+## [Refactoring] Remove dead code and unused exports from API modules
 
 **Description:**
-Ensure full HIPAA compliance across the platform.
+TypeScript's strict mode and ESLint may reveal unused exports and dead code paths in the API modules.
 
 **Tasks:**
-- Audit compliance against HIPAA requirements
-- Implement encryption at rest and in transit
-- Add access control enforcement
-- Create audit logging
-- Implement breach notification procedures
-- Add business associate agreements
-- Create data retention policies
-- Implement data destruction procedures
-- Add security awareness training
-- Implement compliance monitoring
+- Run `ts-prune` or `knip` to find unused exports
+- Remove identified dead code after confirming it is not used
+- Enable `no-unused-vars` and `@typescript-eslint/no-unused-vars` in ESLint config
+- Remove unused imports in all module files
+- Audit `__mocks__` directory for stale mock implementations
 
-**Acceptance Criteria:**
-- All HIPAA safeguards implemented
-- Audit logs prove compliance
-- Data properly encrypted
-- Breach procedures documented
-
 ---
 
-## [Performance] Implement API response caching
+## [Refactoring] Standardize MongoDB model definitions with shared base schema
 
 **Description:**
-Optimize API performance through intelligent caching.
+Every Mongoose model re-declares `createdAt`, `updatedAt`, `clinicId`, `isActive`, and `createdBy`. A shared base schema would reduce duplication and enforce consistency.
 
 **Tasks:**
-- Implement HTTP cache headers
-- Add ETag support for resources
-- Create cache-control strategies
-- Implement conditional requests
-- Add cache busting strategies
-- Create cache warming
-- Implement cache invalidation
-- Add cache metrics tracking
-- Create caching best practices guide
-- Implement Redis caching layer
-
-**Acceptance Criteria:**
-- Cache hit rate >80%
-- Response times improved 40%
-- Conditional requests working
-- Cache coherency maintained
+- Create a `baseSchema` in `apps/api/src/shared/` with common fields
+- Apply `baseSchema` to all models using Mongoose schema composition
+- Ensure soft-delete (`isActive`) and audit fields are consistently present
+- Update migration scripts to handle schema changes
+- Add a unit test verifying all models have the required base fields
 
 ---
 
-## [Documentation] Create comprehensive API documentation
+## [Refactoring] Replace magic strings with typed enums and constants
 
 **Description:**
-Build complete API reference with examples.
+Many files use magic strings for status values, roles, and event names (e.g., `"pending"`, `"admin"`, `"payment.created"`). These should be typed enums or constants.
 
 **Tasks:**
-- Generate OpenAPI specification
-- Create endpoint documentation
-- Add request/response examples
-- Write authentication guide
-- Create rate limiting documentation
-- Add error code reference
-- Document webhooks
-- Create SDK documentation
-- Add integration examples
-- Write migration guides
+- Identify magic strings in models, controllers, and validation schemas
+- Create enums/constants in `packages/types/src/index.ts` for: user roles, appointment statuses, payment statuses, encounter statuses, notification types
+- Replace magic strings with the typed values
+- Update `packages/anonymize` and other packages to use shared types
+- Run tests to verify no broken comparisons after the change
 
-**Acceptance Criteria:**
-- All endpoints documented
-- Examples executable and tested
-- SDKs published
-- Documentation searchable
-
 ---
 
-## [Documentation] Build architecture decision records (ADRs)
+## [Refactoring] Improve TypeScript strictness settings
 
 **Description:**
-Document architectural decisions and rationale.
+`tsconfig.base.json` may not have all strict TypeScript checks enabled. Gradually increasing strictness improves code quality and catches bugs.
 
 **Tasks:**
-- Create ADR template
-- Document technology choices
-- Write scaling decisions
-- Document security architecture
-- Write deployment strategy
-- Document data modeling
-- Create caching strategy ADR
-- Write authentication approach
-- Document error handling design
-- Create deprecation policies
-
-**Acceptance Criteria:**
-- 20+ key decisions documented
-- Rationale clear
-- Trade-offs explained
-- ADRs referenced in code
+- Enable `strict: true` in `tsconfig.base.json` if not already set
+- Fix all resulting TypeScript errors app by app, starting with `packages/`
+- Enable `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`
+- Add `@typescript-eslint/recommended-type-checked` to the ESLint config
+- Document the strictness progression plan in `CONTRIBUTING.md`
 
 ---
 
-## [Documentation] Create troubleshooting guide
+## [Testing] Add unit tests for the AI risk calculator
 
 **Description:**
-Build comprehensive troubleshooting documentation.
+`risk-calculator.test.ts` exists but may not cover edge cases: patients with no history, patients with chronic conditions, risk score boundaries.
 
 **Tasks:**
-- Document common errors
-- Create error code reference
-- Write debugging procedures
-- Document performance issues
-- Create deployment troubleshooting
-- Write database troubleshooting
-- Document authentication issues
-- Create payment issue guide
-- Write data migration troubleshooting
-- Add FAQ section
+- Audit existing test coverage using Istanbul/nyc
+- Add tests for: zero-history patient, maximum risk patient, age boundary conditions
+- Add tests for the risk factor weighting algorithm
+- Add a property-based test using `fast-check` for fuzz testing
+- Ensure test data does not use real patient identifiers
+- Achieve at least 90% branch coverage for `risk-calculator.ts`
 
-**Acceptance Criteria:**
-- 50+ common issues documented
-- Solutions actionable
-- Debugging faster 50%
-- Support tickets reduced
-
 ---
 
-## [Documentation] Build runbook collection
+## [Testing] Add contract tests for API ↔ Web consumer/provider
 
 **Description:**
-Create operational runbooks for common tasks.
+`apps/api/src/contracts/` and `apps/web/src/contracts/` exist for Pact contract testing, but the number of covered interactions may be low.
 
 **Tasks:**
-- Create deployment runbook
-- Write rollback procedures
-- Create incident response runbook
-- Write scaling procedures
-- Document backup procedures
-- Create monitoring alert runbooks
-- Write password reset procedures
-- Create data export runbook
-- Document user management procedures
-- Create database maintenance procedures
-
-**Acceptance Criteria:**
-- Runbooks cover all critical ops
-- Steps clear and actionable
-- Time estimates provided
-- Regularly updated and tested
+- Add consumer contract tests for all major API calls from the web app: login, patients CRUD, encounters CRUD, payments
+- Run Pact provider verification on the API side in CI
+- Publish Pact files to a Pact Broker or GitHub artifact store
+- Add contract tests for the web app ↔ stellar-service interactions
+- Document the Pact workflow in `docs/TESTING_GUIDE.md`
 
 ---
 
-## [Monitoring] Set up ELK stack for log aggregation
+## [Testing] Add integration tests for the Stellar payment reconciliation service
 
 **Description:**
-Implement centralized log collection and analysis.
+`payment-reconciliation.ts` is a critical service but may lack integration tests that simulate the Stellar testnet responses.
 
 **Tasks:**
-- Set up Elasticsearch cluster
-- Configure Logstash for log ingestion
-- Set up Kibana dashboards
-- Implement log retention policies
-- Add index lifecycle management
-- Create log parsing rules
-- Implement alerting on log patterns
-- Add log search optimization
-- Create log analysis dashboards
-- Implement log compliance archival
+- Mock the Horizon API client for deterministic tests
+- Test successful reconciliation of a single payment
+- Test reconciliation when a payment is not found on the ledger
+- Test reconciliation of a batch with partial failures
+- Test the retry logic and idempotency
+- Test the reconciliation job's scheduled execution
 
-**Acceptance Criteria:**
-- All logs centralized
-- Searches complete in <1 second
-- Alerting working
-- Retention policies enforced
-
 ---
 
-## [Monitoring] Create operational dashboards
+## [Testing] Add mutation testing baseline for the auth module
 
 **Description:**
-Build comprehensive operational dashboards.
+`apps/api/stryker.config.json` configures Stryker mutation testing. The auth module is the most security-critical and should have a mutation score above 80%.
 
 **Tasks:**
-- Create system health dashboard
-- Build application metrics dashboard
-- Create business metrics dashboard
-- Implement real-time alerts dashboard
-- Build cost tracking dashboard
-- Create compliance dashboard
-- Build security dashboard
-- Create performance dashboard
-- Implement incident tracking dashboard
-- Add capacity planning dashboard
+- Run Stryker on `apps/api/src/modules/auth/`
+- Identify and fix surviving mutants in: JWT verification, password hashing, MFA validation, token rotation
+- Document the mutation testing process and current score in `docs/TESTING_GUIDE.md`
+- Add a CI gate that fails if the auth module mutation score drops below 80%
+- Add Stryker to the weekly CI schedule for the full API
 
-**Acceptance Criteria:**
-- Key metrics visible at a glance
-- Dashboards update in real-time
-- On-call engineer informed
-- Decision-making improved
-
 ---
 
-## [Backend] Implement user role-based access control (RBAC)
+## [Testing] Add performance regression tests with k6 baselines
 
 **Description:**
-Build comprehensive role-based access control system for multi-clinic management.
+`k6/` contains load test scripts and `performance/baselines/baselines.json` stores baseline metrics, but the baselines may be outdated.
 
 **Tasks:**
-- Define role hierarchy (admin, provider, staff, patient)
-- Implement permission matrix for resources
-- Create role assignment workflow
-- Implement dynamic permission checking middleware
-- Add role-based API filtering
-- Create role audit logging
-- Implement temporary role elevation with approval
-- Add role inheritance mechanism
-- Create role templates for common positions
-- Implement role conflict detection
-
-**Acceptance Criteria:**
-- All endpoints enforce RBAC
-- Roles configurable per clinic
-- Audit trail shows all access changes
-- Performance impact <10ms per request
+- Update baselines by running `k6 run k6/regression-baseline.js` against the current staging environment
+- Add a CI job (`performance.yml`) that runs the smoke test on every PR to detect regressions
+- Alert when p95 latency for login, patient list, or payment creation exceeds baseline by 20%
+- Document how to update baselines in `docs/LOAD_TESTING.md`
+- Add a patient-import load test scenario
 
 ---
 
-## [Backend] Build patient communication system
+## [Testing] Add test coverage reporting to SonarCloud
 
 **Description:**
-Implement secure messaging between patients and providers.
+`sonar-project.properties` is configured but test coverage may not be uploading correctly, leading to inaccurate SonarCloud coverage metrics.
 
 **Tasks:**
-- Create message encryption system
-- Implement message threading
-- Add attachment support with virus scanning
-- Create read/unread status tracking
-- Implement message search and filtering
-- Add message expiration policies
-- Create message template system
-- Implement urgent message flagging
-- Add message delivery confirmation
-- Create communication analytics
+- Verify Jest is configured to output LCOV coverage in all apps
+- Add coverage upload steps to `ci.yml` for API, web, and stellar-service
+- Configure SonarCloud to use the LCOV reports
+- Set a minimum coverage gate of 70% in SonarCloud
+- Fix the badge URL in the README with the correct project key
+- Ensure coverage excludes test files, mocks, and migration files
 
-**Acceptance Criteria:**
-- Messages encrypted end-to-end
-- Search completes in <500ms
-- System handles 100k messages/day
-- HIPAA audit trail maintained
-
 ---
 
-## [Backend] Implement prescription management system
+## [Testing] Add mobile app integration tests
 
 **Description:**
-Build complete prescription workflow from creation to fulfillment.
+`apps/mobile/` has screens and services but no test files. The mobile app is a contributor target with no safety net.
 
 **Tasks:**
-- Create prescription generation engine
-- Implement e-prescription integration
-- Add medication refill automation
-- Create prescription expiration tracking
-- Implement pharmacy integration
-- Add prescription history tracking
-- Create prescription compliance checking
-- Implement authorization requirements
-- Add prescription fraud detection
-- Create prescription analytics
-
-**Acceptance Criteria:**
-- Prescriptions meet regulatory requirements
-- Pharmacy integration tested
-- Fraud detection accuracy >99%
-- Compliance verified
+- Set up Jest with React Native Testing Library for the mobile app
+- Add unit tests for `auth.service.ts`, `offline-cache.service.ts`, `health-workflows.service.ts`
+- Add render tests for `DashboardScreen`, `PaymentScreen`, `ImmunizationsScreen`
+- Mock the Expo modules for navigation and notifications
+- Add a `test` script to `apps/mobile/package.json`
+- Document how to run mobile tests in `apps/mobile/README.md`
 
 ---
 
-## [Backend] Build patient insurance verification system
+## [Testing] Add security headers E2E test coverage
 
 **Description:**
-Implement real-time insurance verification and eligibility checking.
+`apps/web/e2e/security-headers.spec.ts` exists but may only check a few headers. HIPAA-compliant apps need comprehensive security header verification.
 
 **Tasks:**
-- Integrate insurance clearinghouse API
-- Create eligibility verification
-- Implement coverage checking
-- Add benefit verification
-- Create authorization workflows
-- Implement insurance claim submission
-- Add claim status tracking
-- Create insurance denial handling
-- Implement appeal workflow
-- Add insurance analytics reporting
+- Add tests for: `Content-Security-Policy`, `X-Frame-Options`, `Strict-Transport-Security`, `X-Content-Type-Options`, `Permissions-Policy`, `Referrer-Policy`
+- Verify CSP blocks inline scripts in production builds
+- Test that the API returns `X-Request-ID` on all responses
+- Verify `CORS` headers restrict origins to the expected frontend URL
+- Add the test to the nightly CI schedule
 
-**Acceptance Criteria:**
-- Verifications complete in <10 seconds
-- Accuracy rate >95%
-- Claim submission automated
-- Appeal tracking accurate
-
 ---
 
-## [Backend] Implement patient timeline/activity feed
+## [Testing] Improve test isolation using test database fixtures
 
 **Description:**
-Create comprehensive activity feed showing all patient interactions.
+API integration tests may share state through a shared MongoDB connection, causing flaky tests when run in parallel.
 
 **Tasks:**
-- Track all patient interactions chronologically
-- Implement event filtering and search
-- Create notification settings per user
-- Add activity aggregation for summary view
-- Implement activity privacy controls
-- Create activity retention policies
-- Add bulk activity download
-- Implement activity patterns analysis
-- Create suspicious activity detection
-- Add activity export for records
-
-**Acceptance Criteria:**
-- Timeline loads in <2 seconds
-- All relevant events captured
-- Privacy controls enforced
-- Search powerful yet simple
+- Implement per-test database isolation using `mongomock-server` or `mongodb-memory-server`
+- Create fixture factories for: `Patient`, `User`, `Encounter`, `Payment`, `Clinic`
+- Replace ad-hoc `beforeEach` data setup with fixture factories
+- Enable Jest's `--runInBand` for integration tests to ensure isolation
+- Document the fixture pattern in `docs/TESTING_GUIDE.md`
 
 ---
 
-## [Frontend] Build analytics and reporting dashboard
+## [DevOps] Add Redis to the local development Docker Compose
 
 **Description:**
-Create comprehensive analytics interface for clinic managers.
+Rate limiting, caching, and idempotency keys depend on Redis, but `docker-compose.dev.yml` only includes MongoDB. Local development diverges from production.
 
 **Tasks:**
-- Implement custom report builder
-- Create predefined report templates
-- Add date range picker
-- Implement data export to multiple formats
-- Create visualization library integration
-- Add filtering and drill-down capabilities
-- Implement report scheduling
-- Create report sharing functionality
-- Add benchmarking comparisons
-- Implement performance metrics tracking
+- Add a `redis` service to `docker-compose.dev.yml`
+- Configure the API to use Redis for rate limiting and session caching
+- Add Redis connection health check to the API startup
+- Document Redis usage in the README quick-start guide
+- Add a `redis` service to `docker-compose.yml` (full stack) if not already present
 
-**Acceptance Criteria:**
-- Reports generate in <10 seconds
-- Visualizations interactive
-- Export reliable
-- Mobile viewing supported
-
 ---
 
-## [Frontend] Implement clinic settings management
+## [DevOps] Add automated secrets rotation to the Kubernetes setup
 
 **Description:**
-Build comprehensive clinic configuration interface.
+`k8s/secret-rotation-lambda.py` and `k8s/secret-rotation-config.yaml` exist, but the end-to-end rotation workflow may not be tested or documented.
 
 **Tasks:**
-- Create clinic profile editor
-- Implement business hours configuration
-- Add provider management interface
-- Create department/specialty management
-- Implement facility settings
-- Add holiday and closure date management
-- Create notification preferences
-- Implement branding customization
-- Add security policy configuration
-- Create audit log viewer
-
-**Acceptance Criteria:**
-- All settings persist correctly
-- Changes audit logged
-- Settings validated before save
-- Mobile settings accessible
+- Document the secret rotation process for: JWT secrets, Stellar keypairs, MongoDB credentials
+- Add a GitHub Actions workflow that can trigger a manual rotation with approval
+- Test the Lambda function locally using `aws lambda invoke`
+- Add Prometheus alerts for secrets nearing their rotation date
+- Verify the API handles secret rotation without downtime (zero-downtime rotation)
 
 ---
 
-## [Frontend] Build patient registration flow
+## [DevOps] Add Kubernetes readiness and liveness probe documentation
 
 **Description:**
-Create step-by-step patient registration with validation.
+The Kubernetes deployment files define probes, but developers adding new services need guidance on how to configure them correctly.
 
 **Tasks:**
-- Implement multi-step registration form
-- Add identity verification
-- Create insurance information collection
-- Implement consent management
-- Add emergency contact form
-- Create medication history input
-- Implement allergy entry
-- Add insurance card scanning (OCR)
-- Create form progress indicator
-- Implement form validation with helpful errors
+- Document the difference between liveness and readiness probes in `k8s/README.md`
+- Verify the API health endpoint (`/health`) is suitable as a liveness probe
+- Add a separate readiness endpoint (`/ready`) that checks database connectivity
+- Add startup probes for services with slow initialization (stellar-service)
+- Test probe behavior during rolling deployments
 
-**Acceptance Criteria:**
-- Registration completes in <5 minutes
-- All validations working
-- OCR accurate >90%
-- Mobile registration successful
-
 ---
 
-## [Frontend] Implement lab results visualization
+## [DevOps] Add cost estimation for AWS resources in production
 
 **Description:**
-Create interactive lab results display with trend analysis.
+The deployment uses EKS, S3, SES, and AWS Secrets Manager. There is no cost estimation or budget alert setup.
 
 **Tasks:**
-- Design lab results table view
-- Implement results search and filtering
-- Add trend visualization charts
-- Create normal range indicators
-- Implement results comparison feature
-- Add critical value highlighting
-- Create result interpretation guides
-- Implement result export functionality
-- Add mobile results view
-- Create result history timeline
+- Add an AWS Cost and Usage Report setup guide to `docs/DEPLOYMENT_GUIDE.md`
+- Define a CloudWatch billing alarm for the expected monthly budget
+- Add Terraform or CloudFormation cost estimation using `infracost`
+- Document approximate costs for: 3-node EKS cluster, S3 storage, SES email volume
+- Add a cost optimization review checklist to the deployment guide
 
-**Acceptance Criteria:**
-- Results load in <2 seconds
-- Charts interactive and responsive
-- Mobile view optimized
-- Accessibility compliance met
-
 ---
 
-## [Frontend] Build medication list manager
+## [DevOps] Add multi-region deployment documentation
 
 **Description:**
-Create interface for managing patient medications.
+The current deployment guide targets a single AWS region. For HIPAA compliance and availability, a multi-region strategy may be required.
 
 **Tasks:**
-- Implement medication search with autocomplete
-- Add dosage and frequency input
-- Create medication interaction warnings
-- Implement medication history view
-- Add discontinuation workflow
-- Create medication refill requests
-- Implement medication adherence tracking
-- Add side effect reporting
-- Create medication export to pharmacy
-- Implement medication reconciliation
-
-**Acceptance Criteria:**
-- Interaction checking real-time
-- Warnings appear immediately
-- History comprehensive
-- Pharmacy export accurate
+- Document the data residency requirements for patient data
+- Add a multi-region architecture diagram showing primary/secondary regions
+- Document MongoDB Atlas global clusters vs. self-managed replica sets across regions
+- Add a cross-region failover runbook
+- Update `docs/DISASTER_RECOVERY_PLAN.md` with regional failover steps
 
 ---
 
-## [CI/CD] Implement smoke testing suite
+## [DevOps] Implement automated certificate renewal with cert-manager
 
 **Description:**
-Create automated smoke tests for critical user flows.
+`k8s/cert-manager-setup.yaml` exists but certificate renewal automation and monitoring may not be fully configured.
 
 **Tasks:**
-- Create test scenarios for critical paths
-- Implement quick test execution (<5 minutes)
-- Add alerting for smoke test failures
-- Create test result reporting
-- Implement test data setup
-- Add cross-browser testing
-- Create test result dashboard
-- Implement retry logic for flaky tests
-- Add test performance metrics
-- Create test maintenance procedures
+- Verify cert-manager is configured with Let's Encrypt or AWS ACM
+- Add a Prometheus alert for certificates expiring within 30 days
+- Add a runbook for certificate renewal failure
+- Test renewal by shortening the certificate validity in a staging environment
+- Document the cert-manager setup in `docs/KUBERNETES_DEPLOYMENT.md`
 
-**Acceptance Criteria:**
-- Tests complete in <5 minutes
-- Coverage of critical paths
-- Failures properly alerted
-- False positives minimized
-
 ---
 
-## [CI/CD] Add API performance benchmarking
+## [DevOps] Add ELK stack integration test
 
 **Description:**
-Implement automated performance testing for API endpoints.
+`logging/` contains full ELK configuration, but there is no automated test verifying that logs from the API and stellar-service actually appear in Elasticsearch.
 
 **Tasks:**
-- Create performance test scenarios
-- Implement baseline performance metrics
-- Add performance regression detection
-- Create load testing suite
-- Implement response time tracking
-- Add throughput measurement
-- Create latency percentile tracking
-- Implement resource utilization monitoring
-- Add performance metrics dashboard
-- Create performance improvement recommendations
-
-**Acceptance Criteria:**
-- Benchmarks run on every PR
-- Regressions detected automatically
-- Metrics tracked historically
-- Recommendations actionable
+- Add a `docker-compose.elk.yml`-based integration test in CI
+- Start the ELK stack and the API, generate some test requests
+- Query Elasticsearch to verify the log entries were indexed
+- Verify the Logstash pipeline (`health-watchers.conf`) parses JSON logs correctly
+- Add a Kibana dashboard import test to verify the dashboard loads
 
 ---
 
-## [DevOps] Implement database sharding strategy
+## [DevOps] Add GitHub Dependabot auto-merge for minor and patch updates
 
 **Description:**
-Design and implement database sharding for scalability.
+`dependabot-auto-merge.yml` exists but may not be fully configured for safe auto-merging of minor/patch updates.
 
 **Tasks:**
-- Design shard key selection
-- Implement shard distribution algorithm
-- Create shard routing layer
-- Add shard rebalancing procedures
-- Implement cross-shard queries
-- Create shard monitoring
-- Add shard backup strategy
-- Implement disaster recovery for shards
-- Create shard migration procedures
-- Add shard analytics and metrics
+- Configure auto-merge for: minor and patch updates to non-security-critical packages
+- Always require manual review for: major version bumps, security-related packages, AWS SDK, and Stellar SDK
+- Add a comment to auto-merged PRs with the change summary
+- Verify the auto-merge respects branch protection rules
+- Test the workflow by manually triggering a Dependabot PR
 
-**Acceptance Criteria:**
-- Data distributed evenly
-- Queries routed correctly
-- Rebalancing tested
-- Performance improved 5x
-
 ---
 
-## [DevOps] Build database connection pooling
+## [DevOps] Add container image signing with cosign
 
 **Description:**
-Implement efficient database connection pooling.
+Container images are built in CI but not signed. In a HIPAA environment, image provenance should be verifiable.
 
 **Tasks:**
-- Configure connection pool settings
-- Implement adaptive pool sizing
-- Add connection timeout handling
-- Create connection leak detection
-- Implement connection validation
-- Add pool metrics tracking
-- Create pool capacity alerts
-- Implement pool failover
-- Add pool performance optimization
-- Create pool debugging tools
-
-**Acceptance Criteria:**
-- Connection reuse >95%
-- Pool capacity optimal
-- Leaks prevented
-- Performance improved
+- Add `sigstore/cosign` to the Docker build workflow
+- Sign images with a GitHub OIDC-backed keyless signature
+- Add an admission controller (Kyverno or OPA Gatekeeper) policy that rejects unsigned images
+- Store the public key in `k8s/` for verification
+- Document the image signing process in `docs/DEPLOYMENT_GUIDE.md`
 
 ---
 
-## [DevOps] Implement blue-green deployment strategy
+## [DevOps] Add MongoDB backup encryption and integrity verification
 
 **Description:**
-Set up blue-green deployment for zero-downtime releases.
+`ops/backup-verification.sh` and `scripts/backup-mongodb.sh` exist, but backups may not be encrypted or integrity-verified after transfer.
 
 **Tasks:**
-- Create dual environment setup
-- Implement traffic switching mechanism
-- Add health check validation
-- Create rollback procedures
-- Implement monitoring during switch
-- Add smoke test automation
-- Create deployment checklist
-- Implement canary release option
-- Add deployment metrics tracking
-- Create deployment runbooks
+- Encrypt backups at rest using AES-256 before uploading to S3
+- Add a checksum (SHA-256) file alongside each backup
+- Verify the checksum after download during restoration
+- Test the full backup → transfer → verify → restore cycle in CI
+- Add a Prometheus alert if the daily backup job fails
+- Document the backup encryption key management
 
-**Acceptance Criteria:**
-- Zero-downtime deployments
-- Rollbacks instant
-- Health checks comprehensive
-- Metrics tracked per deployment
-
 ---
 
-## [DevOps] Set up log rotation and archival
+## [Security] Implement Content Security Policy for the Next.js app
 
 **Description:**
-Implement automated log management and archival.
+`next.config.js` may have a CSP, but it might use `unsafe-inline` or `unsafe-eval` which weakens the policy. A strict CSP is important for HIPAA compliance.
 
 **Tasks:**
-- Configure log rotation policies
-- Implement compression strategy
-- Add archival to cold storage
-- Create log retention schedules
-- Implement log indexing
-- Add log search optimization
-- Create log lifecycle management
-- Implement log encryption
-- Add cost optimization
-- Create compliance archival
-
-**Acceptance Criteria:**
-- Logs rotated appropriately
-- Storage costs optimized
-- Searchability maintained
-- Compliance met
+- Audit the current CSP in `next.config.js`
+- Remove `unsafe-inline` by using nonces for inline scripts
+- Add `report-uri` to collect CSP violations via `csp-report.controller.ts`
+- Test the CSP in Chrome's CSP evaluator tool
+- Add a CSP E2E test using `e2e/security-headers.spec.ts`
+- Document the CSP policy in `docs/SECURITY_POLICY.md`
 
 ---
 
-## [Refactoring] Extract data layer abstraction
+## [Security] Implement PHI field-level encryption in MongoDB
 
 **Description:**
-Create data access layer to decouple from database.
+`apps/api/src/modules/patients/phi-encryption.test.ts` has tests, but the encryption implementation may not cover all PHI fields or may use a weak algorithm.
 
 **Tasks:**
-- Implement repository pattern
-- Create data access interfaces
-- Extract query logic
-- Implement query builders
-- Add query caching layer
-- Create data transformation layer
-- Implement error handling
-- Add data validation
-- Create test fixtures
-- Document data layer
+- Audit which patient fields are classified as PHI (per HIPAA Safe Harbor or Expert Determination)
+- Verify AES-256-GCM is used for field-level encryption
+- Ensure the encryption key is loaded from AWS Secrets Manager, not the environment
+- Add encrypted fields for: `nationalId`, `phone`, `address`, `insuranceNumber`
+- Verify encrypted fields cannot be queried directly (add a searchable hash index instead)
+- Write tests verifying data is stored encrypted and decrypted on read
 
-**Acceptance Criteria:**
-- Database operations centralized
-- Testing improved
-- Query optimization easier
-- Coupling reduced
-
 ---
 
-## [Refactoring] Standardize API response format
+## [Security] Add brute-force protection to the patient portal login
 
 **Description:**
-Implement consistent response format across all endpoints.
+The portal has SMS OTP and MFA (`portal-mfa.service.ts`), but the portal login endpoint may lack brute-force protection (account lockout after N failures).
 
 **Tasks:**
-- Define response schema
-- Create response formatter middleware
-- Implement pagination wrapper
-- Add metadata to responses
-- Create error response standardization
-- Implement response compression
-- Add response validation
-- Create response examples
-- Implement response testing
-- Document response format
+- Add progressive delays after failed portal login attempts
+- Lock the portal account after 10 failed attempts and require email/SMS verification to unlock
+- Log failed attempts to the audit log
+- Add a CAPTCHA challenge after 5 failed attempts
+- Write tests simulating brute-force attacks
+- Document the lockout policy in `docs/SECURITY_POLICY.md`
 
-**Acceptance Criteria:**
-- All responses consistent format
-- Client parsing simplified
-- Pagination standard
-- Documentation complete
-
 ---
 
-## [Refactoring] Extract configuration management
+## [Security] Implement API key scoping and least-privilege access
 
 **Description:**
-Centralize and standardize configuration management.
+`apps/api/src/modules/api-keys/` manages API keys but keys may grant broad access. Scoped keys allow third-party integrators to access only the data they need.
 
 **Tasks:**
-- Create configuration service
-- Implement environment-specific configs
-- Add secrets management integration
-- Create configuration validation
-- Implement dynamic reloading
-- Add configuration versioning
-- Create configuration audit logging
-- Implement configuration defaults
-- Add configuration documentation
-- Create configuration testing
-
-**Acceptance Criteria:**
-- All configs centralized
-- Validation prevents errors
-- Changes tracked
-- Security best practices followed
+- Add a `scopes` array to the API key model (e.g., `patients:read`, `payments:write`)
+- Enforce scope checks in the `api-key.middleware.ts`
+- Display available scopes in the API key creation UI
+- Add a test verifying a key with `patients:read` scope cannot write
+- Rotate all existing keys without scopes on next login (warn users)
+- Document the available scopes in the API docs
 
 ---
 
-## [Testing] Implement API contract testing
+## [Security] Add SSRF protection to outbound HTTP requests
 
 **Description:**
-Add consumer-driven contract testing for API reliability.
+The API makes outbound HTTP requests to Stellar Horizon, exchange rate APIs, and webhooks. Without SSRF protection, an attacker could redirect requests to internal services.
 
 **Tasks:**
-- Set up Pact framework
-- Create consumer contracts
-- Implement provider verification
-- Add contract publishing
-- Create breaking change detection
-- Implement contract matrix
-- Add contract testing CI/CD
-- Create contract versioning strategy
-- Implement contract documentation
-- Add contract maintenance procedures
+- Add an allowlist of permitted outbound hostnames in `packages/config/`
+- Block requests to RFC 1918 private IP ranges (10.x.x.x, 172.16.x.x, 192.168.x.x) and localhost
+- Add SSRF protection to the webhook delivery service
+- Log blocked outbound requests to the audit log
+- Write tests verifying requests to private IPs are blocked
 
-**Acceptance Criteria:**
-- Contracts defined for all APIs
-- Breaking changes detected
-- Tests run in CI/CD
-- Coverage comprehensive
-
 ---
 
-## [Testing] Build performance profiling suite
+## [Security] Implement TOTP-based MFA for clinic admin accounts
 
 **Description:**
-Implement tools for profiling application performance.
+`apps/api/src/modules/auth/totp.service.ts` exists and MFA toggle is in the settings UI, but the enforcement for admin and doctor roles may be incomplete.
 
 **Tasks:**
-- Set up profiling framework
-- Create CPU profiling tests
-- Add memory profiling
-- Implement query profiling
-- Add bottleneck identification
-- Create performance baselines
-- Implement regression detection
-- Add profiling visualization
-- Create profiling reports
-- Document profiling best practices
-
-**Acceptance Criteria:**
-- Bottlenecks easily identified
-- Baselines tracked
-- Regressions detected
-- Optimization guided
+- Enforce MFA for users with `admin`, `doctor`, and `nurse` roles
+- Implement a grace period for newly enrolled users (`mfa-grace-period-job.ts`)
+- Add a recovery flow using backup codes (`backup-codes.test.ts` tests this)
+- Add MFA audit events: enrolled, verified, recovery code used
+- Write a test verifying admin login fails without MFA
+- Update the MFA documentation in `SECURITY.md`
 
 ---
 
-## [Security] Implement data encryption at rest
+## [Mobile] Add biometric authentication to the mobile app
 
 **Description:**
-Encrypt all sensitive data stored in the database.
+`apps/mobile/src/services/auth.service.ts` handles login but the mobile app may not support biometric authentication (Face ID, fingerprint) for returning users.
 
 **Tasks:**
-- Implement field-level encryption
-- Create key management system
-- Add encryption key rotation
-- Implement encrypted search
-- Create decryption on retrieval
-- Add encryption status tracking
-- Implement bulk encryption migration
-- Create encryption key audit logging
-- Add encryption performance optimization
-- Implement encryption for backups
+- Add `expo-local-authentication` dependency
+- Check for biometric support on device startup
+- Offer biometric enrollment after successful password login
+- Store the auth token securely in the OS keychain using `expo-secure-store`
+- Add a fallback to PIN/password when biometric fails
+- Write tests mocking the biometric API
 
-**Acceptance Criteria:**
-- All sensitive data encrypted
-- Keys properly managed
-- Encryption transparent to code
-- Performance impact <5%
-
 ---
 
-## [Security] Implement rate limiting per resource
+## [Mobile] Implement offline data caching for patient records
 
 **Description:**
-Add fine-grained rate limiting for specific resources.
+`apps/mobile/src/services/offline-cache.service.ts` stubs exist but the full implementation of caching patient records and encounters for offline use is incomplete.
 
 **Tasks:**
-- Implement resource-specific limits
-- Create adaptive rate limiting
-- Add burst allowances
-- Implement quota management
-- Create rate limit bypass rules
-- Add rate limit headers
-- Implement rate limit analytics
-- Create rate limit alerts
-- Add rate limit configuration UI
-- Implement distributed rate limiting
-
-**Acceptance Criteria:**
-- Limits prevent abuse
-- Legitimate traffic unaffected
-- Configuration flexible
-- Metrics tracked
+- Cache the last 50 viewed patients and their encounters using AsyncStorage
+- Show a "cached" badge on data that may be stale
+- Implement a sync strategy when connectivity is restored
+- Add conflict resolution: show a diff when server data differs from cached data
+- Test offline behavior by disabling the network in the test environment
 
 ---
 
-## [Documentation] Create data model documentation
+## [Mobile] Add push notifications for appointment reminders
 
 **Description:**
-Document all data models and relationships.
+`apps/mobile/src/services/notification.service.ts` stubs exist, but the full Expo push notification integration for appointment reminders is incomplete.
 
 **Tasks:**
-- Create entity-relationship diagrams
-- Document field descriptions
-- Add validation rules
-- Document relationships
-- Create data type specifications
-- Add constraints documentation
-- Implement auto-generated documentation
-- Create data examples
-- Document data migration patterns
-- Create data modeling guide
+- Register the device for Expo push notifications on login
+- Store the Expo push token on the API (`users.controller.ts`)
+- Send appointment reminders 24 hours and 2 hours before the appointment
+- Handle notification taps by deep-linking to the appointment detail
+- Test notification delivery using the Expo push notification tool
+- Add a notification preferences screen in the mobile app
 
-**Acceptance Criteria:**
-- All entities documented
-- Relationships clear
-- Validation rules understandable
-- Examples included
-
 ---
 
-## [Documentation] Build testing guide
+## [Mobile] Add immunization tracking screen with due date alerts
 
 **Description:**
-Create comprehensive testing best practices guide.
+`apps/mobile/src/screens/ImmunizationsScreen.tsx` exists but may lack due date visualization and alert integration.
 
 **Tasks:**
-- Document testing strategy
-- Write unit testing guide
-- Add integration testing guide
-- Create E2E testing guide
-- Document mocking strategies
-- Add fixture creation guide
-- Create test data management
-- Document test organization
-- Add test naming conventions
-- Create test maintenance guide
-
-**Acceptance Criteria:**
-- Testing best practices documented
-- Examples provided
-- Standards clear
-- Guide comprehensive
+- Show upcoming due immunizations in a card at the top of the screen
+- Add a visual timeline of past and upcoming immunizations
+- Send a push notification 7 days before an immunization is due
+- Allow caregivers to mark immunizations as administered from the mobile app
+- Add a PDF export of the immunization certificate
+- Write tests for the due date calculation logic
 
 ---
 
-## [Documentation] Create deployment procedures guide
+## [Mobile] Implement care plans progress tracking in mobile
 
 **Description:**
-Write detailed deployment procedures and checklists.
+`apps/mobile/src/screens/CarePlansScreen.tsx` lists care plans but may lack progress tracking, goal completion, and reminders.
 
 **Tasks:**
-- Create pre-deployment checklist
-- Document deployment steps
-- Write rollback procedures
-- Create post-deployment verification
-- Document monitoring during deployment
-- Add communication templates
-- Create incident response procedures
-- Document emergency fixes
-- Add deployment metrics tracking
-- Create deployment approval workflow
+- Add a progress bar for each care plan goal
+- Allow patients to mark daily/weekly tasks as complete from the mobile app
+- Send a daily reminder push notification for outstanding tasks
+- Show a streak counter for consistent task completion
+- Sync completion status with the backend API
+- Write tests for the progress calculation logic
 
-**Acceptance Criteria:**
-- Procedures clear and complete
-- Checklists comprehensive
-- Team aligned on process
-- Deployments consistent
-
 ---
 
-## [Documentation] Create API migration guide
+## [Refactoring] Migrate encounters module to service-repository pattern
 
 **Description:**
-Document API versioning and migration procedures.
+`encounters.controller.ts` (30KB) is too large and directly queries MongoDB. Extracting a repository layer improves testability and separation of concerns.
 
 **Tasks:**
-- Document API versioning strategy
-- Create deprecation timeline policy
-- Write migration guides for major versions
-- Document backward compatibility rules
-- Create API changelog format
-- Write client migration examples
-- Document API sunset procedures
-- Add breaking change notifications
-- Create API deprecation dashboard
-- Document API support lifecycle
+- Create `encounter.repository.ts` with typed methods: `findById`, `findByPatient`, `findByClinic`, `create`, `update`, `softDelete`
+- Move all Mongoose queries from the controller into the repository
+- Create `encounter.service.ts` that calls the repository and applies business logic
+- Keep the controller thin: only handle HTTP request/response
+- Update all tests to mock the repository instead of the database
+- Document the pattern in `CONTRIBUTING.md`
 
-**Acceptance Criteria:**
-- Policy clear to all developers
-- Migration guides comprehensive
-- Deprecation timeline followed
-- Client updates tracked
-
 ---
 
-## [Documentation] Build healthcare compliance guide
+## [Refactoring] Centralize clinic-scoping logic in a shared middleware
 
 **Description:**
-Create comprehensive HIPAA and healthcare compliance documentation.
+Nearly every controller extracts `clinicId` from the JWT and uses it to scope database queries. This pattern is duplicated hundreds of times and should be centralized.
 
 **Tasks:**
-- Document HIPAA requirements mapping
-- Create PHI handling procedures
-- Write data breach response procedures
-- Document consent management
-- Create audit trail requirements
-- Write encryption requirements
-- Document access control standards
-- Create compliance checklist
-- Write compliance testing procedures
-- Document compliance reporting
-
-**Acceptance Criteria:**
-- All requirements documented
-- Procedures actionable
-- Team trained
-- Compliance verified
+- Create a `clinicScope` middleware in `apps/api/src/middlewares/`
+- The middleware should attach `req.clinicId` after verifying the JWT
+- Update all controllers to use `req.clinicId` instead of extracting it manually
+- Add a test verifying that a request without a valid clinic scope returns 403
+- Document the middleware in the API module development guide
 
 ---
 
-## [Monitoring] Implement application metrics collection
+## [Refactoring] Consolidate multiple ESLint configuration files
 
 **Description:**
-Add comprehensive application-level metrics.
+The project has `eslint.config.js` at the root and in each app (`apps/api/eslint.config.js`, `apps/web/.eslintrc.json`, `apps/stellar-service/eslint.config.js`). This duplication leads to inconsistent rules.
 
 **Tasks:**
-- Implement business metrics collection
-- Add feature usage tracking
-- Create user behavior analytics
-- Implement conversion tracking
-- Add error rate metrics
-- Create performance metrics
-- Implement custom metrics framework
-- Add metrics aggregation
-- Create metrics alerting
-- Document metrics usage
+- Create a canonical ESLint config in `packages/config/eslint-config/`
+- Extend the shared config in each app's ESLint file
+- Add app-specific overrides only where necessary
+- Run `eslint --fix` across the codebase to apply the new rules
+- Ensure the `pre-commit` hook runs lint-staged correctly
 
-**Acceptance Criteria:**
-- Key metrics tracked
-- Aggregation accurate
-- Alerting relevant
-- Insights actionable
-
 ---
 
-## [Monitoring] Build incident management system
+## [Refactoring] Improve structured logging across all services
 
 **Description:**
-Implement system for managing and tracking incidents.
+`apps/stellar-service/src/logger.ts` and the API use a logger, but log levels, fields, and formats may be inconsistent across services, making Logstash parsing unreliable.
 
 **Tasks:**
-- Create incident classification
-- Implement incident creation workflow
-- Add incident priority assignment
-- Create incident tracking dashboard
-- Implement incident assignment
-- Add incident timeline
-- Create incident communication
-- Implement post-incident review
-- Add incident analytics
-- Create incident runbooks
-
-**Acceptance Criteria:**
-- Incidents tracked completely
-- Dashboard shows status
-- Communication clear
-- Learning documented
+- Standardize on a JSON log format with mandatory fields: `timestamp`, `level`, `service`, `requestId`, `message`
+- Add `clinicId` and `userId` to all request-scoped log entries
+- Remove `console.log` and `console.error` calls (replace with the logger)
+- Add a lint rule banning `console.log` in production code
+- Test that Logstash parses the standardized log format correctly
 
 ---
 
-## [Performance] Implement query optimization
+## [Refactoring] Reduce bundle size of the Next.js web app
 
 **Description:**
-Systematically optimize database queries for performance.
+Large bundle sizes hurt initial load performance. The web app likely has opportunities for code splitting, tree shaking, and dependency removal.
 
 **Tasks:**
-- Profile slow queries
-- Create query optimization strategy
-- Implement index optimization
-- Add query result caching
-- Create connection pooling
-- Implement lazy loading
-- Add N+1 query detection
-- Create query batch operations
-- Implement query monitoring
-- Create query optimization guide
+- Run `@next/bundle-analyzer` and generate a bundle visualization
+- Identify the top 5 largest dependencies and evaluate alternatives
+- Add dynamic `import()` for heavy components (charts, PDF generator, signature pad)
+- Remove unused CSS with PurgeCSS (should be handled by Tailwind, verify config)
+- Set a bundle size budget in Webpack/Next.js config to fail builds that exceed it
+- Document the bundle optimization strategy
 
-**Acceptance Criteria:**
-- Queries 50% faster
-- N+1 problems eliminated
-- Indexes optimized
-- Monitoring comprehensive
-
 ---
 
-## [Performance] Build frontend performance optimization
+## [Refactoring] Move hardcoded configuration values to environment variables
 
 **Description:**
-Implement frontend performance improvements.
+Some values that should be configurable are hardcoded: retry counts, timeout values, batch sizes, rate limit thresholds.
 
 **Tasks:**
-- Implement lazy loading for images
-- Add script deferral
-- Create CSS optimization
-- Implement font loading optimization
-- Add critical rendering path optimization
-- Create resource hints
-- Implement compression
-- Add caching strategies
-- Create bundle analysis
-- Implement performance budgets
-
-**Acceptance Criteria:**
-- Lighthouse score >90
-- Load time <2 seconds
-- Performance budget enforced
-- Mobile optimized
+- Grep for hardcoded timeout values (`5000`, `30000`, etc.) in controller and service files
+- Move retry counts and timeouts to `packages/config/index.ts` with env var overrides
+- Move batch size limits to config with sensible defaults
+- Validate configuration at startup and fail fast if required values are missing
+- Update `.env.example` with the new configuration variables
 
 ---
 
-## [DevOps] Implement auto-scaling policies
+## [Feature] Implement telemedicine video call integration
 
 **Description:**
-Create auto-scaling for handling traffic spikes.
+`appointments/telemedicine.service.ts` and `telemedicine.test.ts` exist, but the video call integration (e.g., Twilio Video, Daily.co, or WebRTC) is not complete.
 
 **Tasks:**
-- Define scaling metrics
-- Create scale-up policies
-- Implement scale-down policies
-- Add cooldown periods
-- Create scaling alerts
-- Implement load balancing
-- Add capacity planning
-- Create scaling testing
-- Implement scaling metrics tracking
-- Add scaling cost analysis
+- Choose a video call provider (evaluate Twilio Video, Daily.co, Jitsi self-hosted)
+- Implement room creation and token generation in `telemedicine.service.ts`
+- Add a "Start Video Call" button to the appointment detail page
+- Implement the in-browser video call UI using the provider's SDK
+- Add waiting room functionality for patients
+- Record session metadata (start time, duration, participants) for billing purposes
 
-**Acceptance Criteria:**
-- Auto-scaling works reliably
-- Scale decisions optimal
-- Cost reasonable
-- Response times consistent
-
 ---
 
-## [Backend] Implement audit trail for all changes
+## [Feature] Implement subscription and billing management
 
 **Description:**
-Create immutable audit trail for compliance.
+`apps/api/src/modules/subscriptions/` and `SubscriptionSection.tsx` exist, but the subscription lifecycle (trial, upgrade, downgrade, cancellation) may be incomplete.
 
 **Tasks:**
-- Implement change tracking on all models
-- Create audit event logging
-- Add timestamp and user tracking
-- Implement audit log querying
-- Create audit log retention policies
-- Add audit log encryption
-- Implement audit log archival
-- Create audit log compliance reports
-- Add real-time audit alerts
-- Implement audit log recovery
-
-**Acceptance Criteria:**
-- All changes audited
-- Audit logs immutable
-- Queries complete in <2 seconds
-- Compliance verified
+- Integrate with Stripe or a payment processor for subscription billing
+- Implement trial expiry notifications
+- Add plan upgrade/downgrade with proration
+- Implement feature flags based on subscription tier (`subscription.tiers.ts`)
+- Add a subscription analytics dashboard for admins
+- Write tests for plan change scenarios
 
 ---
 
-## [Frontend] Build notification preferences UI
+## [Feature] Implement patient portal surveys
 
 **Description:**
-Create interface for managing notification settings.
+`apps/api/src/modules/surveys/` and the survey model exist, but the patient portal does not expose surveys for patients to complete.
 
 **Tasks:**
-- Implement notification type selection
-- Add channel preference settings
-- Create notification frequency controls
-- Implement quiet hours scheduling
-- Add notification content preferences
-- Create notification preview
-- Implement notification history
-- Add unsubscribe management
-- Create notification templates viewer
-- Implement notification testing
+- Add a `/portal/surveys` page listing pending surveys
+- Implement the survey completion flow with progress indicator
+- Support question types: multiple choice, Likert scale, free text, date
+- Send a notification when a new survey is assigned
+- Show survey results to clinic staff in the encounter detail
+- Add analytics: response rate, average scores per question
 
-**Acceptance Criteria:**
-- All preferences respected
-- Settings persist
-- Notifications follow preferences
-- Mobile settings work
-
 ---
 
-## [Frontend] Implement document viewer
+## [Feature] Implement automated billing aging report
 
 **Description:**
-Build secure document viewing interface.
+`apps/api/src/modules/billing/billing-aging.ts` stubs an aging report, but the full implementation with 30/60/90/120+ day buckets and automated reminder emails is not complete.
 
 **Tasks:**
-- Create PDF viewer integration
-- Add document annotations
-- Implement document download
-- Create document printing
-- Add search within documents
-- Implement document thumbnails
-- Add document rotation
-- Create document zoom controls
-- Implement document access logging
-- Add document version history
+- Calculate aging buckets for all outstanding invoices
+- Implement automated email reminders at 30, 60, and 90 days overdue
+- Add an aging summary to the finance dashboard
+- Allow manual overrides: mark as "in dispute", "payment plan", "written off"
+- Export the aging report to CSV and PDF
+- Write tests for the aging bucket calculation
 
-**Acceptance Criteria:**
-- Documents display correctly
-- Annotations work properly
-- Search accurate
-- Access logged
-
 ---
 
-## [CI/CD] Implement automated code quality checks
+## [Feature] Implement Stellar DEX trading for currency conversion
 
 **Description:**
-Add code quality scoring and enforcement.
+`apps/api/src/modules/payments/dex/` directory exists, suggesting DEX (decentralized exchange) features are planned for converting between currencies using Stellar's DEX.
 
 **Tasks:**
-- Set up code quality tool (SonarQube)
-- Implement complexity analysis
-- Add code smell detection
-- Create duplication detection
-- Implement maintainability scoring
-- Add coverage requirements
-- Create quality gate enforcement
-- Implement quality trend tracking
-- Add quality improvement suggestions
-- Create code quality dashboard
+- Implement path payment discovery using the Stellar Horizon `/paths` API
+- Show available conversion paths and exchange rates before a payment
+- Allow patients to pay in local currency (converted to XLM via DEX)
+- Add slippage protection: cancel if rate moves more than X% during submission
+- Show DEX conversion fees in the payment breakdown
+- Write integration tests using the Stellar testnet DEX
+
+---
+
+## [Feature] Implement population health management dashboard
 
-**Acceptance Criteria:**
-- Quality scores tracked
-- Gate prevents regressions
-- Suggestions actionable
-- Team improvement measurable
+**Description:**
+`apps/api/src/modules/ai/population-health.service.ts` and `population-health.controller.ts` exist, but there is no frontend for population health analytics.
 
+**Tasks:**
+- Create a `/reports/population-health` page
+- Show: prevalence rates for top diagnoses, vaccination coverage, chronic disease distribution
+- Add cohort filtering: age group, gender, clinic branch
+- Integrate with the AI risk stratification service to show high-risk cohorts
+- Add an export to CSV for research data (with anonymization)
+- Visualize trends over time using line charts
 
 ---
 
-## [Testing] Implement load testing framework
+## [Feature] Add differential diagnosis suggestion to encounter form
 
 **Description:**
-Build framework for load and stress testing.
+`DifferentialDiagnosisPanel.tsx` exists, but the integration with the AI service (`differential-diagnosis.service.ts`) and encounter form may be incomplete.
 
 **Tasks:**
-- Set up load testing tool (k6/JMeter)
-- Create load test scenarios
-- Implement gradual ramp-up testing
-- Add spike testing
-- Create sustained load testing
-- Implement bottleneck identification
-- Add reporting and metrics
-- Create load testing dashboard
-- Implement automated alerts
-- Document load testing procedures
+- Show AI-suggested diagnoses in real time as the clinician enters SOAP notes
+- Display confidence scores and supporting evidence for each suggestion
+- Allow the clinician to accept, reject, or modify suggestions
+- Log accepted/rejected suggestions for AI model improvement
+- Add a feedback button to flag incorrect suggestions
+- Write tests for the suggestion display and accept/reject flow
 
-**Acceptance Criteria:**
-- Tests simulate real user load
-- Bottlenecks identified
-- Reports clear and actionable
-- Metrics tracked over time
-
 ---
 
-## [Frontend] Implement advanced filtering system
+## [Feature] Implement peer review workflow for encounters
 
 **Description:**
-Build sophisticated data filtering with UI.
+`apps/api/src/modules/peer-reviews/peer-reviews.router.ts` and `peer-reviews.test.ts` exist, but the frontend for peer review management is missing.
 
 **Tasks:**
-- Create filter builder interface
-- Implement filter persistence
-- Add saved filter management
-- Create filter sharing
-- Implement complex filter logic
-- Add filter suggestions
-- Create filter templates
-- Implement filter export
-- Add filter performance optimization
-- Create filter help and tooltips
-
-**Acceptance Criteria:**
-- Filters support complex logic
-- Persistence working
-- Performance good
-- Mobile filtering works
+- Create a peer review request form in the encounter detail page
+- Show pending peer reviews on the reviewer's dashboard
+- Implement the review completion form: rating, comments, recommendations
+- Send notifications to the author when a review is completed
+- Add peer review analytics: average rating, common feedback themes
+- Write E2E tests for the full peer review workflow
 
 ---
 
-## [Backend] Implement data validation rules engine
+## [Feature] Implement claim submission and insurance integration
 
 **Description:**
-Create customizable validation rules system.
+`apps/api/src/modules/billing/claim-builder.ts` and `claims.controller.ts` exist in payments, but the end-to-end insurance claim submission workflow may be incomplete.
 
 **Tasks:**
-- Create rule definition format
-- Implement rule evaluation engine
-- Add custom validation functions
-- Create rule versioning
-- Implement rule testing framework
-- Add rule conflict detection
-- Create rule performance optimization
-- Implement rule error messages
-- Add rule debugging
-- Create rule documentation
+- Implement CMS-1500 (HCFA) claim form generation as a PDF
+- Add a clearinghouse integration stub (Availity, Change Healthcare)
+- Implement claim status tracking: submitted, accepted, rejected, paid, denied
+- Add a claims dashboard showing ERA (Electronic Remittance Advice) status
+- Implement claim correction and resubmission workflow
+- Write tests for claim form field validation and status transitions
 
-**Acceptance Criteria:**
-- Rules customizable and versioned
-- Evaluation fast (<50ms)
-- Errors helpful
-- Documentation complete
-
 ---
 
-## [DevOps] Implement service discovery
+## [Feature] Add recurring payment management to patient portal
 
 **Description:**
-Set up dynamic service discovery for microservices.
+`recurring-payment.controller.ts` and `recurring-payment.service.ts` exist on the API side. The portal should allow patients to manage their recurring payments.
 
 **Tasks:**
-- Implement service registration
-- Create service discovery mechanism
-- Add health check integration
-- Implement load balancing
-- Create automatic deregistration
-- Add service monitoring
-- Implement failover handling
-- Create service dependency mapping
-- Add service discovery dashboard
-- Implement service discovery alerts
+- Add a `/portal/payments/recurring` page listing active recurring payments
+- Allow patients to pause, resume, or cancel a recurring payment
+- Show payment history for each recurring plan
+- Send email confirmation when a recurring payment is modified
+- Add a portal payment method management page (add/remove cards)
+- Write Playwright tests for the recurring payment management flow
 
-**Acceptance Criteria:**
-- Services automatically discovered
-- Health checks accurate
-- Failover automatic
-- Dashboard shows status
-
 ---
 
-## [Documentation] Create system design documentation
+## [Feature] Implement clinical decision support (CDS) rule management
 
 **Description:**
-Document system design decisions and architecture.
+`CDSRuleForm.tsx`, `CDSRulesList.tsx`, and `CDSRuleTester.tsx` exist in the frontend, and the CDS rules engine is implemented on the backend. The management UI may be incomplete.
 
 **Tasks:**
-- Create system overview document
-- Document major components
-- Write data flow diagrams
-- Create integration points documentation
-- Document scalability design
-- Write reliability measures
-- Create security design documentation
-- Document monitoring strategy
-- Add deployment architecture
-- Create system design rationale
+- Complete the rule creation form with a visual condition builder
+- Add a rule testing sandbox that runs rules against sample patient data
+- Implement rule versioning: show history of changes to a rule
+- Add role-based access: only `admin` and `medical_director` can create rules
+- Add rule conflict detection: warn when two rules fire for the same condition
+- Write tests for the rule creation and testing flows
+
+---
+
+## [Feature] Implement HIPAA data export for patients
+
+**Description:**
+`.changeset/feat-hipaa-data-export.md` indicates this feature is planned. Patients have the right to access and export their health data under HIPAA.
 
-**Acceptance Criteria:**
-- Architecture decisions clear
-- Rationale documented
-- New developers understand system
-- Documentation kept updated
+**Tasks:**
+- Add a "Download my data" button to the patient portal
+- Export all data: demographics, encounters, lab results, medications, immunizations, payments
+- Support formats: JSON (FHIR R4), PDF, and CSV
+- Implement async export for large records (notify by email when ready)
+- Add a 30-day download link expiry for security
+- Log all data exports to the audit trail
+- Write tests verifying the export contains complete and anonymized-where-appropriate data
 
 ---
 
-## [Security] Implement intrusion detection
+## [Feature] Implement referral tracking with external provider integration
 
 **Description:**
-Build system to detect suspicious activity.
+`referrals.controller.ts` manages internal referrals, but tracking referrals to external providers and receiving status updates from them is not implemented.
 
 **Tasks:**
-- Implement failed login detection
-- Add unusual access pattern detection
-- Create privilege escalation detection
-- Implement data exfiltration detection
-- Add anomaly scoring
-- Create alert rules
-- Implement investigation tools
-- Add automatic response actions
-- Create detection dashboards
-- Implement false positive reduction
+- Add an "external provider" type to the referral model
+- Implement a referral status webhook endpoint for external providers
+- Add a referral status timeline in the patient detail page
+- Send automated follow-up notifications to the referring clinic if no status update is received within 30 days
+- Add a referral analytics report: referral volume by specialty, average time to first appointment
+- Write tests for the external referral webhook handler
+
+---
+
+## [Infrastructure] Add Terraform modules for AWS infrastructure
+
+**Description:**
+The project has Kubernetes manifests and Helm charts but no Infrastructure-as-Code for the underlying AWS resources (EKS, VPC, RDS, S3, SES).
 
-**Acceptance Criteria:**
-- Attacks detected early
-- False positives minimal
-- Investigation easy
-- Response automated
+**Tasks:**
+- Create a `terraform/` directory with modules for: VPC, EKS cluster, S3 buckets, SES configuration, IAM roles
+- Add a `terraform/environments/` directory for staging and production configs
+- Document how to bootstrap the infrastructure in `docs/DEPLOYMENT_GUIDE.md`
+- Add `terraform plan` to CI for pull requests that touch `terraform/`
+- Use remote state (S3 + DynamoDB) for state management
 
 ---
 
-## [Monitoring] Implement uptime monitoring
+## [Infrastructure] Implement multi-tenant clinic isolation at the infrastructure level
 
 **Description:**
-Create comprehensive uptime monitoring and reporting.
+Clinic data is scoped via `clinicId` in the application layer, but there is no infrastructure-level isolation (separate namespaces, network policies, or database users per tenant).
 
 **Tasks:**
-- Implement health check endpoints
-- Create uptime tracking
-- Add SLA monitoring
-- Implement downtime notifications
-- Create status page
-- Add historical uptime data
-- Implement uptime analytics
-- Create uptime reports
-- Add uptime dashboard
-- Implement uptime alerts
+- Add Kubernetes `NetworkPolicy` resources to isolate clinic namespaces (if multi-namespace is adopted)
+- Document the current multi-tenancy model and its security assumptions
+- Add database-level read/write users with scoped permissions per clinic tier
+- Add a penetration test scenario: clinic A should not access clinic B's data
+- Document multi-tenant compliance considerations in `SECURITY.md`
+
+---
 
-**Acceptance Criteria:**
-- Uptime tracked accurately
-- SLAs monitored
-- Status page current
-- Analytics useful
+## [Infrastructure] Add CDN configuration for static assets
 
+**Description:**
+`.env.cdn.example` references CDN configuration, but the CDN setup for the Next.js app's static assets is not fully documented or automated.
+
+**Tasks:**
+- Configure CloudFront (or similar CDN) to serve `/_next/static/` assets
+- Add cache-busting via content hashes (Next.js does this by default — verify)
+- Configure CDN to set long `Cache-Control` headers for static assets
+- Add CDN cache invalidation to the deployment pipeline
+- Document CDN setup and configuration in `docs/DEPLOYMENT_GUIDE.md`
+
 ---
 
-## [Performance] Implement caching strategies
+## [Infrastructure] Implement MongoDB connection pooling optimization
 
 **Description:**
-Implement intelligent caching throughout the stack.
+`docs/REPLICATION_OPTIMIZATION.md` documents replication, but connection pooling settings for high-traffic scenarios are not explicitly configured.
 
 **Tasks:**
-- Implement HTTP caching
-- Add Redis caching layer
-- Create cache invalidation strategy
-- Implement cache warming
-- Add cache hit tracking
-- Create cache analytics
-- Implement distributed caching
-- Add cache debugging tools
-- Create caching best practices guide
-- Implement cache performance monitoring
+- Set optimal `maxPoolSize`, `minPoolSize`, and `waitQueueTimeoutMS` in the MongoDB connection config
+- Add connection pool metrics to Prometheus
+- Add an alert when the wait queue exceeds a threshold
+- Test pool exhaustion behavior under load
+- Document the connection pool configuration in `docs/DATABASE_SCHEMA.md`
 
-**Acceptance Criteria:**
-- Cache hit rate >80%
-- Performance improved 50%
-- Consistency maintained
-- Debugging easy
+---
